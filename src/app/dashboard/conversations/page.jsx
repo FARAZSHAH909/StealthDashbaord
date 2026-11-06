@@ -5,49 +5,115 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useFirebaseData } from "@/hooks/useFirebaseData";
 import { useKeyVault } from "@/lib/encryption/KeyVaultContext";
 import { getAppMeta, getInitials, formatFullDateTime } from "@/lib/utils/formatters";
-import { Search, MessagesSquare, ArrowRight, Smartphone, Filter } from "lucide-react";
+import { Search, MessagesSquare, ArrowRight, Smartphone, Filter, X } from "lucide-react";
 import Link from "next/link";
 
 export default function ConversationsPage() {
-  const { conversations, loading } = useFirebaseData();
+  const { conversations, devices, loading } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
   const [search, setSearch] = useState("");
   const [selectedApp, setSelectedApp] = useState("all");
+  const [selectedDevice, setSelectedDevice] = useState("all");
+
+  const availableApps = useMemo(() => {
+    const set = new Set();
+    for (const c of conversations) {
+      if (c.appPackage) set.add(c.appPackage);
+    }
+    return Array.from(set);
+  }, [conversations]);
 
   const filtered = useMemo(() => {
     return conversations.filter((c) => {
+      if (selectedDevice !== "all" && c.deviceId !== selectedDevice) return false;
       if (selectedApp !== "all" && c.appPackage !== selectedApp) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (
-        c.senderName.toLowerCase().includes(q) ||
-        c.deviceId.toLowerCase().includes(q) ||
-        c.appPackage.toLowerCase().includes(q)
+        (c.senderName && c.senderName.toLowerCase().includes(q)) ||
+        (c.deviceId && c.deviceId.toLowerCase().includes(q)) ||
+        (c.appPackage && c.appPackage.toLowerCase().includes(q))
       );
     });
-  }, [conversations, search, selectedApp]);
+  }, [conversations, search, selectedApp, selectedDevice]);
 
   return (
     <DashboardLayout
       title="Conversations Directory"
-      subtitle="Organized conversation threads grouped by sender and application context"
+      subtitle="Organized conversation threads grouped by sender, device and application context"
     >
       <div className="p-4 sm:p-6 space-y-4">
         {/* Controls Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-[#111b21] border border-[#222d34]">
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#8696a0]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search conversations by sender or device..."
-              className="w-full pl-9 pr-4 py-1.5 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500"
-            />
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 rounded-2xl bg-[#111b21] border border-[#222d34]">
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 flex-1">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#8696a0]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search contact, text or device..."
+                className="w-full pl-9 pr-4 py-2 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+
+            {/* Device Selector */}
+            <div className="relative w-full sm:w-56">
+              <select
+                value={selectedDevice}
+                onChange={(e) => setSelectedDevice(e.target.value)}
+                className="w-full pl-3 pr-7 py-2 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer appearance-none"
+              >
+                <option value="all">🌐 All Devices ({devices.length})</option>
+                {devices.map((dev, idx) => (
+                  <option key={dev} value={dev}>
+                    📱 Device #{idx + 1} ({dev.slice(0, 8)}...)
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-2.5 pointer-events-none text-[#8696a0] text-[10px]">
+                ▼
+              </div>
+            </div>
+
+            {/* App Selector */}
+            {availableApps.length > 1 && (
+              <div className="relative w-full sm:w-44">
+                <select
+                  value={selectedApp}
+                  onChange={(e) => setSelectedApp(e.target.value)}
+                  className="w-full pl-3 pr-7 py-2 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer appearance-none"
+                >
+                  <option value="all">All Applications</option>
+                  {availableApps.map((pkg) => (
+                    <option key={pkg} value={pkg}>
+                      {getAppMeta(pkg).name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-2.5 pointer-events-none text-[#8696a0] text-[10px]">
+                  ▼
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <span className="text-xs text-[#8696a0]">
+          <div className="flex items-center gap-3 justify-between md:justify-end">
+            {(selectedDevice !== "all" || selectedApp !== "all" || search) && (
+              <button
+                onClick={() => {
+                  setSelectedDevice("all");
+                  setSelectedApp("all");
+                  setSearch("");
+                }}
+                className="text-xs text-rose-400 hover:underline flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+            <span className="text-xs text-[#8696a0] font-mono whitespace-nowrap">
               Showing {filtered.length} of {conversations.length} threads
             </span>
           </div>
@@ -131,4 +197,3 @@ export default function ConversationsPage() {
     </DashboardLayout>
   );
 }
-

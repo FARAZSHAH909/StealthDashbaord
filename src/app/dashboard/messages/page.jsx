@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatPanel from "@/components/messages/ChatPanel";
@@ -9,21 +9,33 @@ import { useFirebaseData } from "@/hooks/useFirebaseData";
 import { useKeyVault } from "@/lib/encryption/KeyVaultContext";
 
 export default function MessagesPage() {
-  const { conversations, loading, error } = useFirebaseData();
+  const { conversations, devices, loading, error } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
 
+  const [selectedDeviceId, setSelectedDeviceId] = useState("all");
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
 
-  // Auto-select first conversation once loaded
-  useEffect(() => {
-    if (!selectedConversationId && conversations.length > 0) {
-      setSelectedConversationId(conversations[0].id);
-    }
-  }, [conversations, selectedConversationId]);
+  // Filter conversations by device if a specific device is selected
+  const visibleConversations = useMemo(() => {
+    if (selectedDeviceId === "all") return conversations;
+    return conversations.filter((c) => c.deviceId === selectedDeviceId);
+  }, [conversations, selectedDeviceId]);
 
-  const activeConversation = conversations.find(
+  // Auto-select first conversation of the visible set if active is not in visible list
+  useEffect(() => {
+    if (visibleConversations.length > 0) {
+      const exists = visibleConversations.some((c) => c.id === selectedConversationId);
+      if (!exists) {
+        setSelectedConversationId(visibleConversations[0].id);
+      }
+    } else {
+      setSelectedConversationId(null);
+    }
+  }, [visibleConversations, selectedConversationId]);
+
+  const activeConversation = visibleConversations.find(
     (c) => c.id === selectedConversationId
   ) || null;
 
@@ -45,7 +57,10 @@ export default function MessagesPage() {
           }`}
         >
           <ConversationList
-            conversations={conversations}
+            conversations={visibleConversations}
+            devices={devices}
+            selectedDeviceId={selectedDeviceId}
+            onSelectDevice={setSelectedDeviceId}
             selectedConversationId={selectedConversationId}
             onSelectConversation={handleSelectConversation}
             onOpenKeyModal={() => setKeyModalOpen(true)}
@@ -75,4 +90,3 @@ export default function MessagesPage() {
     </DashboardLayout>
   );
 }
-
