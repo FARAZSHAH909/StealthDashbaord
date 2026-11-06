@@ -1,0 +1,24 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "notifications_log": {
+      ".read": "auth != null",
+      "$device_id": {
+        ".indexOn": ["timestamp", "app_package_name", "sync_status", "seq_num"],
+        "$message_id": {
+          ".write": "!data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['message_id', 'device_id', 'ciphertext', 'iv', 'timestamp']) && newData.child('device_id').val() === $device_id && newData.child('message_id').val() === $message_id"
+        }
+      }
+    },
+    "audit_logs": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "admin_config": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

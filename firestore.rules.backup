@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for security
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isMasterAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'farazshah9095@gmail.com' ||
+        request.auth.token.role == 'super_admin'
+      );
+    }
+
+    // 1. Single-Use Invite Tokens Collection (admin_invite_tokens)
+    // Used by registration and verification
+    match /admin_invite_tokens/{document} {
+      allow read, write: if true;
+    }
+
+    // 2. Master Gatekeeper Approval Queue (admin_approval_queue)
+    // Used for user registration, master approval, and OTP email verification
+    match /admin_approval_queue/{requestId} {
+      allow read, write: if true;
+    }
+
+    // 3. Admin Users Collection (admin_users)
+    // Authorized administrators and role permissions
+    match /admin_users/{userId} {
+      allow read, write: if true;
+    }
+
+    // 4. Device Management & Revocation
+    match /devices_management/{deviceId} {
+      allow read, write: if true;
+    }
+
+    // 5. Audit & Activity Logs
+    match /activity_logs/{logId} {
+      allow read, write: if true;
+    }
+  }
+}
+

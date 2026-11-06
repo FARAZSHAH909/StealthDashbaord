@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isMasterAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'farazshah9095@gmail.com' ||
+        request.auth.token.role == 'super_admin'
+      );
+    }
+
+    // 1. Device Enrollment & Management
+    // Client creation is strictly disabled: devices must enroll via server-mediated /api/devices/enroll
+    match /devices_management/{deviceId} {
+      allow read: if isMasterAdmin() || (isAuthenticated() && request.auth.uid == deviceId);
+      allow create: if false;
+      allow update: if isMasterAdmin();
+      allow delete: if isMasterAdmin();
+
+      // Authoritative Replay Ledger subcollection
+      match /replay_ledger/{ledgerId} {
+        allow read: if isMasterAdmin();
+        allow write: if false; // Only server-side Admin SDK transactions
+      }
+    }
+
+    // 2. Master Key Manifest & Private Vault
+    match /system_security/master_public_key {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+
+    match /system_security/master_private_vault {
+      allow read: if isMasterAdmin();
+      allow write: if isMasterAdmin();
+    }
+
+    // 3. Single-Use Device Enrollment Tokens (Admin SDK only)
+    match /device_enrollment_tokens/{token} {
+      allow read, write: if false;
+    }
+
+    // 4. Admin Users & Access Control
+    match /admin_users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+
+    // 5. Admin Invite Tokens (Managed server-side)
+    match /admin_invite_tokens/{document} {
+      allow read, write: if false;
+    }
+
+    // 6. Admin Approval Queue
+    match /admin_approval_queue/{requestId} {
+      allow read: if isMasterAdmin();
+      allow write: if isMasterAdmin();
+    }
+
+    // 7. Activity & Audit Logs
+    match /activity_logs/{logId} {
+      allow read: if isMasterAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
