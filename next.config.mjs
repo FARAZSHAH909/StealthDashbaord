@@ -16,6 +16,54 @@ const cspHeader = `
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  async rewrites() {
+    return [
+      {
+        source: '/access-gateway/node-sec-7f9e8a1d4b6c382109abfe43817c5690/session-authenticate',
+        destination: '/login',
+      },
+      {
+        source: '/access-gateway/node-sec-7f9e8a1d4b6c382109abfe43817c5690/enrollment-redemption',
+        destination: '/register',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/system-telemetry-monitor',
+        destination: '/dashboard/overview',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/encrypted-stream-terminal',
+        destination: '/dashboard/messages',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/channel-directory-index',
+        destination: '/dashboard/conversations',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/hardware-fleet-inventory',
+        destination: '/dashboard/devices',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/managed-workload-catalog',
+        destination: '/dashboard/applications',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/replication-audit-journal',
+        destination: '/dashboard/sync-logs',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/metric-aggregation-engine',
+        destination: '/dashboard/analytics',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/audit-surveillance-ledger',
+        destination: '/dashboard/security',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/identity-access-directory',
+        destination: '/dashboard/users',
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -68,4 +116,3 @@ const nextConfig = {
 };
 
 export default nextConfig;
-

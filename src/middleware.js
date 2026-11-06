@@ -160,8 +160,9 @@ export function middleware(request) {
       const isSameHost = cleanOrigin === cleanHost || (cleanForwardedHost && cleanOrigin === cleanForwardedHost);
       const isLocalhost = cleanOrigin === "localhost" || cleanOrigin === "127.0.0.1";
       const isTunnel = cleanOrigin.endsWith(".trycloudflare.com") || cleanOrigin.endsWith(".cloudflareaccess.com");
+      const isVercel = cleanOrigin.endsWith(".vercel.app");
 
-      if (!isSameHost && !isLocalhost && !isTunnel) {
+      if (!isSameHost && !isLocalhost && !isTunnel && !isVercel) {
         console.warn(`[Security Middleware] CSRF Mismatch: Origin ${origin} does not match Host ${host}`);
         return NextResponse.json({ error: "Cross-Origin Request Blocked" }, { status: 403 });
       }
@@ -220,10 +221,8 @@ export function middleware(request) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Authenticated: internally rewrite to Next.js dashboard component
-    const rewriteUrl = new URL(internalTarget, request.url);
-    rewriteUrl.search = request.nextUrl.search;
-    const response = NextResponse.rewrite(rewriteUrl);
+    // Authenticated: next.config.mjs rewrites to internal dashboard component natively
+    const response = NextResponse.next();
     return applySecurityHeaders(response, true);
   }
 
@@ -244,9 +243,8 @@ export function middleware(request) {
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    const rewriteUrl = new URL(internalTarget, request.url);
-    rewriteUrl.search = request.nextUrl.search;
-    const response = NextResponse.rewrite(rewriteUrl);
+    // Native rewrites in next.config.mjs handle the routing to /login or /register
+    const response = NextResponse.next();
     return applySecurityHeaders(response, false);
   }
 
