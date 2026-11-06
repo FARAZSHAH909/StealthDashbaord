@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
@@ -54,7 +54,6 @@ export function AuthProvider({ children }) {
           setUser(firebaseUser);
           setRole(assignedRole);
         } catch (err) {
-          console.error("Error fetching token claims:", err);
           setUser(firebaseUser);
           setRole(null);
         }
@@ -128,7 +127,6 @@ export function AuthProvider({ children }) {
           body: JSON.stringify({ idToken: idTokenResult.token }),
         });
       } catch (sessionErr) {
-        console.warn("Server session establishment notice:", sessionErr.message);
       }
 
       setUser(userCredential.user);

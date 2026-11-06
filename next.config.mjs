@@ -16,6 +16,10 @@ const cspHeader = `
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  compiler: {
+    removeConsole: true,
+  },
   async rewrites() {
     return [
       {

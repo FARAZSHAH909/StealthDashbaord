@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
@@ -14,7 +14,6 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("ErrorBoundary caught an exception:", error, errorInfo);
   }
 
   render() {

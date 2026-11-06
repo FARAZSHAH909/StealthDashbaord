@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -60,14 +60,12 @@ export function KeyVaultProvider({ children }) {
     setError(null);
     deviceKeysCacheRef.current.clear();
     if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-    console.info("🔒 Master Key Vault locked. All in-memory keys purged.");
   }, []);
 
   // Inactivity timeout: auto-lock after 15 minutes of inactivity
   const resetInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
     inactivityTimerRef.current = setTimeout(() => {
-      console.warn("Inactivity timeout reached: Locking master vault and zeroing memory keys.");
       lockVault();
     }, 15 * 60 * 1000);
   }, [lockVault]);
@@ -103,12 +101,10 @@ export function KeyVaultProvider({ children }) {
           const key = await importRawEncryptionKey(data.keyBase64);
           setCryptoKey(key);
           setRawFingerprint("HEX-0x7F9E8A");
-          console.info("🛡️ [KeyVault] Enterprise Zero-Trust Key Loaded into Non-Extractable RAM.");
           return key;
         }
       }
     } catch (err) {
-      console.warn("Key provision notice:", err.message);
     }
     return null;
   }, []);
@@ -144,7 +140,6 @@ export function KeyVaultProvider({ children }) {
                   revoked.add(data.device_id || d.id);
                   if (deviceKeysCacheRef.current.has(data.device_id || d.id)) {
                     deviceKeysCacheRef.current.delete(data.device_id || d.id);
-                    console.warn(`🚨 Real-time revocation: Device [${data.device_id || d.id}] revoked.`);
                   }
                 }
               });

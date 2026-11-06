@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -64,7 +64,6 @@ export default function UsersPage() {
         setUserList(data.users);
       }
     } catch (e) {
-      console.error("Error fetching users:", e);
     }
   };
 
@@ -171,7 +170,7 @@ export default function UsersPage() {
                       </span>
                     </p>
                     <p className="text-[10px] text-[#8696a0] font-mono mt-0.5">
-                      Session ID: {req.requestId} • {req.masterApproved ? "Approved (Token Dispatched)" : "Awaiting Your Permission"}
+                      Session ID: {req.requestId} â€¢ {req.masterApproved ? "Approved (Token Dispatched)" : "Awaiting Your Permission"}
                     </p>
                   </div>
 

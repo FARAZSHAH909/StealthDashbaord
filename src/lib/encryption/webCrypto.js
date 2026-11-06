@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PRODUCTION-GRADE ENTERPRISE WEB CRYPTO API ENGINE
  *
  * Implements:
@@ -42,7 +42,6 @@ export function base64ToUint8Array(base64String) {
       return new Uint8Array(Buffer.from(cleanStr, "base64"));
     }
   } catch (err) {
-    console.error("Base64 decode error:", err);
   }
   return new Uint8Array(0);
 }

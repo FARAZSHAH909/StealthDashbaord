@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ref, onValue, off, query, limitToLast, orderByChild } from "firebase/database";
@@ -88,14 +88,12 @@ export function useFirebaseData(selectedDeviceId = null) {
           setLoading(false);
           setError(null);
         } catch (err) {
-          console.error("Firebase RTDB listener error:", err);
           setError("Failed to parse synchronized records: " + err.message);
           setLoading(false);
         }
       },
       async (err) => {
         if (!isMounted) return;
-        console.warn("Firebase RTDB listener error (" + err.message + "), falling back to REST...");
         try {
           const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
           const authParam = token ? `?auth=${token}` : "";
@@ -140,7 +138,6 @@ export function useFirebaseData(selectedDeviceId = null) {
           setStats(result.stats);
         }
       } catch (err) {
-        console.error("Error organizing conversations:", err);
       }
     }
 
