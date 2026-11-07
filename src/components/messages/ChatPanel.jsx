@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import MessageBubble from "./MessageBubble";
-import DateDivider from "./DateDivider";
+import React, { useState, useMemo } from "react";
+import VirtualMessageFeed from "./VirtualMessageFeed";
 import { getAppMeta, getInitials, formatFullDateTime } from "@/lib/utils/formatters";
 import {
   Search,
@@ -10,12 +9,10 @@ import {
   ShieldCheck,
   Smartphone,
   Info,
-  RefreshCw,
   KeyRound,
   Lock,
   Unlock,
   MessageSquare,
-  Radio,
   CheckCheck,
 } from "lucide-react";
 
@@ -28,14 +25,6 @@ export default function ChatPanel({
   const [inChatSearch, setInChatSearch] = useState("");
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [showDeviceDetails, setShowDeviceDetails] = useState(false);
-  const messagesEndRef = useRef(null);
-
-  // Auto-scroll to bottom of conversation
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [conversation?.messages?.length, conversation?.id]);
 
   // Filter messages within conversation
   const displayedMessages = useMemo(() => {
@@ -122,28 +111,26 @@ export default function ChatPanel({
           )}
 
           {/* Contact Avatar */}
-          <div className="relative flex-shrink-0">
-            <div
-              className={`w-10 h-10 rounded-full ${appMeta.color} flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-black/20`}
-            >
-              {getInitials(conversation.senderName)}
-            </div>
+          <div
+            className={`relative w-10 h-10 rounded-full ${appMeta.color} flex items-center justify-center text-white font-bold text-sm shadow-md ring-2 ring-black/20 flex-shrink-0`}
+          >
+            {getInitials(conversation.senderName)}
             <span
               className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#202c33] flex items-center justify-center"
-              title="Online Active Synced Stream"
+              title={appMeta.name}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
             </span>
           </div>
 
-          {/* Contact Details */}
+          {/* Contact Info */}
           <div className="min-w-0">
-            <h3 className="text-sm sm:text-base font-semibold text-[#e9edef] truncate flex items-center gap-2">
+            <h3 className="font-semibold text-sm sm:text-base text-[#e9edef] truncate flex items-center gap-2">
               <span className="truncate">{conversation.senderName}</span>
               <span
-                className="text-[10px] px-2 py-0.5 rounded-full font-medium shadow-xs"
+                className="text-[10px] px-2 py-0.5 rounded-full font-medium hidden sm:inline-block flex-shrink-0"
                 style={{
-                  backgroundColor: "rgba(0, 168, 132, 0.12)",
+                  backgroundColor: "rgba(0, 168, 132, 0.15)",
                   color: "#00a884",
                   border: "1px solid rgba(0, 168, 132, 0.25)",
                 }}
@@ -247,37 +234,13 @@ export default function ChatPanel({
         </div>
       )}
 
-      {/* Messages Scroll Area with WhatsApp Chat Wallpaper Pattern */}
-      <div
-        className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6"
-        style={{
-          backgroundColor: "#0b141a",
-          backgroundImage: `
-            radial-gradient(circle at 50% 50%, rgba(17, 27, 33, 0.4) 0%, rgba(11, 20, 26, 0.98) 100%),
-            url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23182229' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")
-          `,
-        }}
-      >
-        {messagesWithDateDividers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-[#8696a0] text-xs">
-            <p>No messages match your search criteria.</p>
-          </div>
-        ) : (
-          messagesWithDateDividers.map((item) => {
-            if (item.type === "divider") {
-              return <DateDivider key={item.id} dateLabel={item.label} />;
-            }
-            return (
-              <MessageBubble
-                key={item.id}
-                message={item.data}
-                onUnlockKey={!isKeyUnlocked ? onOpenKeyModal : null}
-              />
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+      {/* High-Performance Virtual Message Feed (Windowed like Instagram Feed) */}
+      <VirtualMessageFeed
+        items={messagesWithDateDividers}
+        conversationId={conversation.id}
+        isKeyUnlocked={isKeyUnlocked}
+        onOpenKeyModal={onOpenKeyModal}
+      />
 
       {/* Bottom Read-Only Status Bar */}
       <div className="px-4 py-2 bg-[#202c33] border-t border-[#2a3942]/70 flex items-center justify-between text-[11px] text-[#8696a0] select-none flex-shrink-0">

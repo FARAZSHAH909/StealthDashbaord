@@ -7,15 +7,25 @@ import ChatPanel from "@/components/messages/ChatPanel";
 import KeyUnlockModal from "@/components/messages/KeyUnlockModal";
 import { useFirebaseData } from "@/hooks/useFirebaseData";
 import { useKeyVault } from "@/lib/encryption/KeyVaultContext";
+import { getSecureItem, setSecureItem } from "@/lib/security/secureStorage";
 
 export default function MessagesPage() {
   const { conversations, devices, loading, error } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
 
-  const [selectedDeviceId, setSelectedDeviceId] = useState("all");
+  // Initialize selected device from obfuscated/encrypted local vault
+  const [selectedDeviceId, setSelectedDeviceIdState] = useState(() => {
+    return getSecureItem("stealth_device_id", "all");
+  });
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [keyModalOpen, setKeyModalOpen] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
+
+  // Sync state and encrypted storage
+  const setSelectedDeviceId = (newDevId) => {
+    setSelectedDeviceIdState(newDevId);
+    setSecureItem("stealth_device_id", newDevId);
+  };
 
   // Filter conversations by device if a specific device is selected
   const visibleConversations = useMemo(() => {

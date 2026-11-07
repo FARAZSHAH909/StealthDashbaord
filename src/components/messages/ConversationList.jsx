@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { formatConversationDate, getAppMeta, getInitials } from "@/lib/utils/formatters";
+import { getSecureItem, setSecureItem } from "@/lib/security/secureStorage";
 
 export default function ConversationList({
   conversations = [],
@@ -28,10 +29,25 @@ export default function ConversationList({
   isKeyUnlocked,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedApp, setSelectedApp] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all"); // "all" | "today" | "24h" | "7d"
-  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "decrypted" | "encrypted"
+  const [selectedApp, setSelectedAppState] = useState(() => getSecureItem("stealth_filter_app", "all"));
+  const [dateFilter, setDateFilterState] = useState(() => getSecureItem("stealth_filter_date", "all")); // "all" | "today" | "24h" | "7d"
+  const [statusFilter, setStatusFilterState] = useState(() => getSecureItem("stealth_filter_status", "all")); // "all" | "decrypted" | "encrypted"
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const setSelectedApp = (val) => {
+    setSelectedAppState(val);
+    setSecureItem("stealth_filter_app", val);
+  };
+
+  const setDateFilter = (val) => {
+    setDateFilterState(val);
+    setSecureItem("stealth_filter_date", val);
+  };
+
+  const setStatusFilter = (val) => {
+    setStatusFilterState(val);
+    setSecureItem("stealth_filter_status", val);
+  };
 
   // Compute message counts per device for friendly selector badges
   const deviceCounts = useMemo(() => {

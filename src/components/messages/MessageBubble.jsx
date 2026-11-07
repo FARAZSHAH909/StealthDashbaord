@@ -17,7 +17,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-export default function MessageBubble({ message, onUnlockKey }) {
+function MessageBubble({ message, onUnlockKey }) {
   const [copied, setCopied] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showRawCrypto, setShowRawCrypto] = useState(false);
@@ -215,3 +215,5 @@ export default function MessageBubble({ message, onUnlockKey }) {
     </div>
   );
 }
+
+export default React.memo(MessageBubble);

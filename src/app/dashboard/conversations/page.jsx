@@ -7,13 +7,24 @@ import { useKeyVault } from "@/lib/encryption/KeyVaultContext";
 import { getAppMeta, getInitials, formatFullDateTime } from "@/lib/utils/formatters";
 import { Search, MessagesSquare, ArrowRight, Smartphone, Filter, X } from "lucide-react";
 import Link from "next/link";
+import { getSecureItem, setSecureItem } from "@/lib/security/secureStorage";
 
 export default function ConversationsPage() {
   const { conversations, devices, loading } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
   const [search, setSearch] = useState("");
-  const [selectedApp, setSelectedApp] = useState("all");
-  const [selectedDevice, setSelectedDevice] = useState("all");
+  const [selectedApp, setSelectedAppState] = useState(() => getSecureItem("stealth_conv_app", "all"));
+  const [selectedDevice, setSelectedDeviceState] = useState(() => getSecureItem("stealth_device_id", "all"));
+
+  const setSelectedApp = (val) => {
+    setSelectedAppState(val);
+    setSecureItem("stealth_conv_app", val);
+  };
+
+  const setSelectedDevice = (val) => {
+    setSelectedDeviceState(val);
+    setSecureItem("stealth_device_id", val);
+  };
 
   const availableApps = useMemo(() => {
     const set = new Set();

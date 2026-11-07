@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ref, onValue, off, query, limitToLast, orderByChild } from "firebase/database";
@@ -6,23 +6,43 @@ import { database, auth } from "@/lib/firebase/client";
 import { organizeConversations } from "@/lib/utils/conversationGrouper";
 import { useKeyVault } from "@/lib/encryption/KeyVaultContext";
 
+/**
+ * Parses RTDB snapshot and deduplicates telemetry packets by key and fingerprint
+ */
 function parseRtdbSnapshot(val, selectedDeviceId) {
   const items = [];
   if (!val || typeof val !== "object") return items;
 
+  const seenKeys = new Set();
+  const seenSignatures = new Set();
+
+  function addItem(msgKey, msgVal, devId) {
+    if (!msgVal || typeof msgVal !== "object") return;
+    if (seenKeys.has(msgKey)) return;
+
+    // Deduplication signature: device + timestamp + (raw_payload or notification_id or text)
+    const sigPayload = msgVal.raw_payload || msgVal.text || msgVal.title || "";
+    const sig = `${msgVal.device_id || devId}_${msgVal.timestamp || ""}_${msgVal.notification_id || ""}_${sigPayload}`;
+    if (sigPayload && seenSignatures.has(sig)) return;
+
+    seenKeys.add(msgKey);
+    if (sigPayload) seenSignatures.add(sig);
+
+    items.push({
+      key: msgKey,
+      val: { ...msgVal, device_id: msgVal.device_id || devId },
+    });
+  }
+
   if (selectedDeviceId) {
     for (const [msgKey, msgVal] of Object.entries(val)) {
-      if (msgVal && typeof msgVal === "object") {
-        items.push({ key: msgKey, val: { ...msgVal, device_id: msgVal.device_id || selectedDeviceId } });
-      }
+      addItem(msgKey, msgVal, selectedDeviceId);
     }
   } else {
     for (const [devKey, devVal] of Object.entries(val)) {
       if (devVal && typeof devVal === "object") {
         for (const [msgKey, msgVal] of Object.entries(devVal)) {
-          if (msgVal && typeof msgVal === "object") {
-            items.push({ key: msgKey, val: { ...msgVal, device_id: msgVal.device_id || devKey } });
-          }
+          addItem(msgKey, msgVal, devKey);
         }
       }
     }
@@ -45,7 +65,7 @@ export function useFirebaseData(selectedDeviceId = null) {
 
   const { cryptoKey } = useKeyVault();
 
-  // 1. Listen to Firebase Realtime Database
+  // 1. Listen to Firebase Realtime Database with live WebSocket + auto-polling fallback
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
@@ -55,7 +75,7 @@ export function useFirebaseData(selectedDeviceId = null) {
       ? `notifications_log/${selectedDeviceId}`
       : "notifications_log";
 
-    // Immediate REST synchronization for instant loading
+    // Immediate REST synchronization for instant loading & zero-refresh background sync
     const fetchImmediateRest = async () => {
       try {
         const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
@@ -69,11 +89,18 @@ export function useFirebaseData(selectedDeviceId = null) {
           setLoading(false);
         }
       } catch (err) {
-        // Non-blocking initial REST fetch
+        // Non-blocking background fetch
       }
     };
 
     fetchImmediateRest();
+
+    // Auto-polling interval every 3.5s to ensure continuous real-time sync without page refresh
+    const pollInterval = setInterval(() => {
+      if (isMounted) {
+        fetchImmediateRest();
+      }
+    }, 3500);
 
     const dbRef = ref(database, dbPath);
 
@@ -121,6 +148,7 @@ export function useFirebaseData(selectedDeviceId = null) {
 
     return () => {
       isMounted = false;
+      clearInterval(pollInterval);
       if (typeof unsubscribe === "function") unsubscribe();
     };
   }, [selectedDeviceId]);
@@ -180,4 +208,3 @@ export function useFirebaseData(selectedDeviceId = null) {
     error,
   };
 }
-
