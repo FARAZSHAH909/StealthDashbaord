@@ -51,6 +51,10 @@ const nextConfig = {
         destination: '/dashboard/applications',
       },
       {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/application-release-deployment',
+        destination: '/dashboard/app-updates',
+      },
+      {
         source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/replication-audit-journal',
         destination: '/dashboard/sync-logs',
       },

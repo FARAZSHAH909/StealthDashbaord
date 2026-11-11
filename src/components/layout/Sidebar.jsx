@@ -19,6 +19,7 @@ import {
   KeyRound,
   Lock,
   Unlock,
+  DownloadCloud,
 } from "lucide-react";
 import { HARDENED_ROUTES, REVERSE_ROUTE_MAP } from "@/lib/security/routesConfig";
 
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { label: "Conversations", href: HARDENED_ROUTES.CONVERSATIONS, icon: MessagesSquare },
   { label: "Devices", href: HARDENED_ROUTES.DEVICES, icon: Smartphone },
   { label: "Applications", href: HARDENED_ROUTES.APPLICATIONS, icon: Layers },
+  { label: "App Releases", href: HARDENED_ROUTES.APP_UPDATES, icon: DownloadCloud },
   { label: "Sync Logs", href: HARDENED_ROUTES.SYNC_LOGS, icon: FileSpreadsheet },
   { label: "Analytics", href: HARDENED_ROUTES.ANALYTICS, icon: BarChart3 },
   { label: "Security Activity", href: HARDENED_ROUTES.SECURITY, icon: ShieldCheck },
