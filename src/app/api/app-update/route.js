@@ -4,13 +4,19 @@ import { recordSecurityAudit } from "@/lib/monitoring/securityAuditLogger";
 
 const RTDB_URL = process.env.FIREBASE_DATABASE_URL || "https://stealthapp-50da2-default-rtdb.firebaseio.com";
 
+// Only invoke adminDatabase if explicit service credentials are configured to avoid 30s metadata discovery hang
+const hasAdminCredentials = Boolean(
+  process.env.FIREBASE_CLIENT_EMAIL &&
+  process.env.FIREBASE_PRIVATE_KEY &&
+  adminDatabase
+);
+
 /**
  * GET: Fetch current App Update configuration from Firebase RTDB
  */
 export async function GET() {
   try {
-    // 1. Try Admin SDK if available
-    if (adminDatabase) {
+    if (hasAdminCredentials) {
       try {
         const snap = await adminDatabase.ref("app_update").once("value");
         const val = snap.val();
@@ -22,8 +28,11 @@ export async function GET() {
       }
     }
 
-    // 2. Direct REST fallback
-    const res = await fetch(`${RTDB_URL}/app_update.json`, { cache: "no-store" });
+    // Direct high-speed REST fetch (< 100ms)
+    const res = await fetch(`${RTDB_URL}/app_update.json`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    });
     const data = await res.json();
     return NextResponse.json({ success: true, data: data || {} });
   } catch (error) {
@@ -64,9 +73,10 @@ export async function POST(request) {
       updated_at: Date.now(),
     };
 
-    // 1. Try Firebase Admin SDK
     let saved = false;
-    if (adminDatabase) {
+
+    // 1. Try Firebase Admin SDK only if credentials exist
+    if (hasAdminCredentials) {
       try {
         await adminDatabase.ref("app_update").update(cleanPayload);
         saved = true;
@@ -75,7 +85,7 @@ export async function POST(request) {
       }
     }
 
-    // 2. Direct REST fallback
+    // 2. Direct high-speed REST update (< 100ms)
     if (!saved) {
       const res = await fetch(`${RTDB_URL}/app_update.json`, {
         method: "PATCH",
@@ -87,7 +97,7 @@ export async function POST(request) {
       }
     }
 
-    // Log security audit
+    // Record audit log
     try {
       recordSecurityAudit({
         type: "APP_RELEASE_UPDATED",
