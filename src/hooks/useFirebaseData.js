@@ -20,13 +20,14 @@ function parseRtdbSnapshot(val, selectedDeviceId) {
     if (!msgVal || typeof msgVal !== "object") return;
     if (seenKeys.has(msgKey)) return;
 
-    // Deduplication signature: device + timestamp + (raw_payload or notification_id or text)
-    const sigPayload = msgVal.raw_payload || msgVal.text || msgVal.title || "";
-    const sig = `${msgVal.device_id || devId}_${msgVal.timestamp || ""}_${msgVal.notification_id || ""}_${sigPayload}`;
-    if (sigPayload && seenSignatures.has(sig)) return;
+    // Robust deduplication signature across encrypted and plaintext records
+    const contentFingerprint = msgVal.checksum || msgVal.ciphertext || msgVal.raw_payload || msgVal.text || "";
+    const roundedTimestamp = msgVal.timestamp ? Math.floor(Number(msgVal.timestamp) / 60000) : "";
+    const sig = `${msgVal.device_id || devId}:::${msgVal.app_package_name || ""}:::${roundedTimestamp}:::${contentFingerprint}`;
+    if (contentFingerprint && seenSignatures.has(sig)) return;
 
     seenKeys.add(msgKey);
-    if (sigPayload) seenSignatures.add(sig);
+    if (contentFingerprint) seenSignatures.add(sig);
 
     items.push({
       key: msgKey,

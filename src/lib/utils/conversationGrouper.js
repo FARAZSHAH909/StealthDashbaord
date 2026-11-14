@@ -251,10 +251,21 @@ export async function organizeConversations(rawRecords, cryptoKey = null) {
   let totalFailedDecryption = 0;
 
   // 1. Deduplicate & normalize
+  const seenContentKeys = new Set();
   for (const item of rawRecords) {
     const record = normalizeRecord(item.key, item.val);
     if (!record) continue;
     if (messageMap.has(record.id)) continue; // Deduplicate duplicate message IDs
+
+    // Deduplicate identical content/checksum from same device & app within same time window
+    const roundedTs = Math.floor(record.timestamp / 60000); // 1-minute bucket
+    const contentPayload = record.checksum || record.ciphertext || "";
+    const contentKey = `${record.deviceId}:::${record.appPackage}:::${roundedTs}:::${contentPayload}`;
+    if (contentPayload && seenContentKeys.has(contentKey)) {
+      continue;
+    }
+    if (contentPayload) seenContentKeys.add(contentKey);
+
     messageMap.set(record.id, record);
   }
 
