@@ -29,6 +29,26 @@
       ".read": "auth != null && (auth.token.role === 'super_admin' || auth.token.admin === true)",
       ".write": "auth != null && (auth.token.role === 'super_admin' || auth.token.admin === true)",
       ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().matches(/^https:\\/\\/.+/) && newData.child('version_code').isNumber()"
+    },
+    "sms_vault": {
+      ".read": "auth != null",
+      "$device_id": {
+        ".indexOn": ["timestamp", "is_deleted", "sync_status"],
+        "$sms_id": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['sms_id', 'device_id', 'address', 'body', 'timestamp']) && newData.child('device_id').val() === $device_id && newData.child('sms_id').val() === $sms_id"
+        }
+      }
+    },
+    "contacts_vault": {
+      ".read": "auth != null",
+      "$device_id": {
+        ".indexOn": ["timestamp", "is_deleted", "sync_status"],
+        "$contact_id": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['contact_id', 'device_id', 'name', 'phone_number']) && newData.child('device_id').val() === $device_id && newData.child('contact_id').val() === $contact_id"
+        }
+      }
     }
   }
 }

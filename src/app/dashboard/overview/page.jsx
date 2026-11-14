@@ -20,15 +20,21 @@ import {
   ArrowUpRight,
   DownloadCloud,
   ExternalLink,
+  Contact,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useAppUpdate } from "@/hooks/useAppUpdate";
+import { useSmsVault } from "@/hooks/useSmsVault";
+import { useContactsVault } from "@/hooks/useContactsVault";
 import { HARDENED_ROUTES } from "@/lib/security/routesConfig";
 
 export default function OverviewPage() {
   const { rawRecords, conversations, allMessages, devices, applications, loading, error } = useFirebaseData();
   const { isUnlocked } = useKeyVault();
   const { production: appProd, staging: appStaging } = useAppUpdate();
+  const { stats: smsStats } = useSmsVault();
+  const { stats: contactsStats } = useContactsVault();
 
   // Compute actual metrics from live Firebase records
   const metrics = useMemo(() => {
@@ -171,6 +177,81 @@ export default function OverviewPage() {
               <span>Inspect All Values</span>
               <ArrowUpRight className="w-4 h-4 text-emerald-400" />
             </Link>
+          </div>
+        </div>
+
+        {/* Isolated Vault Highlights (SMS & Contacts) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* SMS Vault Highlight */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#111b21] to-[#15232d] border border-blue-900/30 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">SMS Telemetry Vault</h4>
+                  <p className="text-[11px] text-[#8696a0]">Isolated hardware encrypted SMS archive</p>
+                </div>
+              </div>
+              <Link
+                href={HARDENED_ROUTES.SMS_VAULT}
+                className="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center gap-1 transition"
+              >
+                <span>View Vault</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#222d34]/60">
+              <div>
+                <span className="text-[10px] text-[#8696a0] block">Total</span>
+                <span className="text-sm font-bold text-white font-mono">{smsStats.total}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-emerald-400 block">Active</span>
+                <span className="text-sm font-bold text-emerald-400 font-mono">{smsStats.active}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-rose-400 block">Deleted</span>
+                <span className="text-sm font-bold text-rose-400 font-mono">{smsStats.deleted}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contacts Vault Highlight */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-[#111b21] to-[#1a231f] border border-emerald-900/30 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <Contact className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Contacts Directory Vault</h4>
+                  <p className="text-[11px] text-[#8696a0]">Client address book & tombstone tracker</p>
+                </div>
+              </div>
+              <Link
+                href={HARDENED_ROUTES.CONTACTS_VAULT}
+                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-1 transition"
+              >
+                <span>View Directory</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#222d34]/60">
+              <div>
+                <span className="text-[10px] text-[#8696a0] block">Total</span>
+                <span className="text-sm font-bold text-white font-mono">{contactsStats.total}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-emerald-400 block">Active</span>
+                <span className="text-sm font-bold text-emerald-400 font-mono">{contactsStats.active}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-rose-400 block">Deleted</span>
+                <span className="text-sm font-bold text-rose-400 font-mono">{contactsStats.deleted}</span>
+              </div>
+            </div>
           </div>
         </div>
 

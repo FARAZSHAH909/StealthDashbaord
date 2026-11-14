@@ -70,6 +70,14 @@ const nextConfig = {
         source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/identity-access-directory',
         destination: '/dashboard/users',
       },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/isolated-sms-vault-repository',
+        destination: '/dashboard/sms',
+      },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/isolated-contacts-vault-directory',
+        destination: '/dashboard/contacts',
+      },
     ];
   },
   webpack: (config, { isServer }) => {
