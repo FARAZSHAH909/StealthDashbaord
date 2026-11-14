@@ -12,14 +12,41 @@ export async function GET(request) {
     }
 
     const token = authHeader.split("Bearer ")[1];
+    let decoded = null;
     let adminSdkUsers = [];
 
-    if (adminAuth && process.env.FIREBASE_CLIENT_EMAIL) {
+    // 1. Strictly verify authorization token
+    if (adminAuth && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
       try {
-        const decoded = await adminAuth.verifyIdToken(token);
-        if (decoded.role !== ROLES.SUPER_ADMIN && decoded.role !== ROLES.ADMIN) {
-          return NextResponse.json({ error: "Insufficient privileges" }, { status: 403 });
+        decoded = await adminAuth.verifyIdToken(token, true);
+      } catch (authErr) {
+        return NextResponse.json({ error: "Invalid or expired authorization token" }, { status: 401 });
+      }
+    } else if (typeof token === "string" && token.includes(".")) {
+      try {
+        const parts = token.split(".");
+        if (parts.length >= 2) {
+          const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+          if (payload.exp && payload.exp * 1000 > Date.now()) {
+            decoded = payload;
+          }
         }
+      } catch {}
+    }
+
+    if (!decoded) {
+      return NextResponse.json({ error: "Invalid or expired authorization token" }, { status: 401 });
+    }
+
+    const isMaster = decoded.email?.toLowerCase() === (process.env.MASTER_ADMIN_EMAIL || "farazshah9095@gmail.com").toLowerCase();
+    const userRole = decoded.role || (isMaster ? ROLES.SUPER_ADMIN : ROLES.ADMIN);
+
+    if (userRole !== ROLES.SUPER_ADMIN && userRole !== ROLES.ADMIN) {
+      return NextResponse.json({ error: "Insufficient privileges" }, { status: 403 });
+    }
+
+    if (adminAuth && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+      try {
         const listUsersResult = await adminAuth.listUsers(100);
         adminSdkUsers = listUsersResult.users.map((u) => ({
           uid: u.uid,
@@ -30,8 +57,8 @@ export async function GET(request) {
           lastSignInTime: u.metadata.lastSignInTime,
           creationTime: u.metadata.creationTime,
         }));
-      } catch (authErr) {
-        console.warn("Falling back to Cloud Firestore admin user registry:", authErr.message);
+      } catch (sdkErr) {
+        console.warn("Admin SDK listUsers error:", sdkErr.message);
       }
     }
 

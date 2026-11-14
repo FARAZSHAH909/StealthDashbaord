@@ -22,13 +22,13 @@
     },
     "app_update": {
       ".read": true,
-      ".write": "auth != null",
-      ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().beginsWith('https://') && newData.child('version_code').isNumber()"
+      ".write": "auth != null && (auth.token.role === 'super_admin' || auth.token.admin === true)",
+      ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().matches(/^https:\\/\\/.+/) && newData.child('version_code').isNumber()"
     },
     "app_update_staging": {
-      ".read": true,
-      ".write": "auth != null",
-      ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().beginsWith('https://') && newData.child('version_code').isNumber()"
+      ".read": "auth != null && (auth.token.role === 'super_admin' || auth.token.admin === true)",
+      ".write": "auth != null && (auth.token.role === 'super_admin' || auth.token.admin === true)",
+      ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().matches(/^https:\\/\\/.+/) && newData.child('version_code').isNumber()"
     }
   }
 }

@@ -6,6 +6,9 @@ import { verifyP256Signature } from "@/lib/encryption/signatureUtils";
 
 const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000; // 5 minutes
 
+// Module-level secure private secret for fallback device token HMAC signing (never client-exposed)
+const FALLBACK_HMAC_SECRET = process.env.DEVICE_TOKEN_SECRET || process.env.COOKIE_ENCRYPTION_KEY || process.env.ADMIN_INVITE_SECRET || crypto.randomBytes(32).toString("hex");
+
 export async function POST(request) {
   try {
     let body;
@@ -79,9 +82,9 @@ export async function POST(request) {
     }
 
     if (!customToken) {
-      // Deterministic signed fallback token for local runtime
+      // Deterministic signed fallback token using server-side private secret
       const tokenPayload = JSON.stringify({ uid: device_id, role: "device", exp: now + 3600000 });
-      const hmac = crypto.createHmac("sha256", process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "stealth-key")
+      const hmac = crypto.createHmac("sha256", FALLBACK_HMAC_SECRET)
         .update(tokenPayload)
         .digest("base64url");
       customToken = `dev_tok_${Buffer.from(tokenPayload).toString("base64url")}.${hmac}`;

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import { secureApiHandler } from "@/lib/api/secureApiHandler";
 import { setDocument } from "@/lib/firebase/firestoreService";
 
-export async function POST(request) {
-  try {
-    const { updatedVaultDoc } = await request.json();
+export const POST = secureApiHandler({
+  allowedMethods: ["POST"],
+  requiredRole: "super_admin",
+  handler: async ({ body }) => {
+    const { updatedVaultDoc } = body || {};
 
     if (!updatedVaultDoc) {
       return NextResponse.json({ error: "Missing updated vault document" }, { status: 400 });
@@ -13,11 +16,8 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: "Master Key Vault updated successfully"
+      message: "Master Key Vault updated successfully",
     });
-  } catch (error) {
-    console.error("Vault update error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+  },
+});
 

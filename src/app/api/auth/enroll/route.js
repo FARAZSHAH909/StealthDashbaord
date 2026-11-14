@@ -29,8 +29,6 @@ export async function POST(request) {
       email: enrollment.email,
       isMaster: enrollment.isMaster,
       nextStep: enrollment.nextStep,
-      // For Master email development convenience, verification code is also logged and returned
-      devOtpHint: enrollment.isMaster ? enrollment.verificationToken : null,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
