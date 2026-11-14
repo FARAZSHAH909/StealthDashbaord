@@ -11,8 +11,7 @@ import java.util.Base64;
 
 public class AndroidCryptoProof {
 
-    private static final String MASTER_PASSPHRASE = "StealthAdminSuperMasterPassphrase2026!";
-    private static final String MASTER_SALT = "StealthAppMasterSalt2026";
+    // Removed hardcoded credentials (Resolves VULN-01 / CWE-798 / CWE-321)
     private static final int PBKDF2_ITERATIONS = 100000;
     private static final int KEY_LENGTH_BITS = 256;
     private static final int GCM_TAG_LENGTH = 128;
@@ -66,9 +65,19 @@ public class AndroidCryptoProof {
     public static void main(String[] args) throws Exception {
         System.out.println("--- Starting Android Java Cryptographic Engine Proof ---");
 
+        String passphrase = args.length > 0 ? args[0] : System.getenv("STEALTH_PASSPHRASE");
+        String salt = args.length > 1 ? args[1] : System.getenv("STEALTH_SALT");
+
+        if (passphrase == null || passphrase.isEmpty()) {
+            passphrase = "DynamicEphemeralProofPassphrase_" + System.currentTimeMillis();
+        }
+        if (salt == null || salt.isEmpty()) {
+            salt = "DynamicProofSalt_" + System.currentTimeMillis();
+        }
+
         // Step 1: Derive Master Key
-        SecretKey kMaster = deriveMasterKey(MASTER_PASSPHRASE, MASTER_SALT);
-        System.out.println("✓ Master Key derived via PBKDF2WithHmacSHA256 (100k iterations)");
+        SecretKey kMaster = deriveMasterKey(passphrase, salt);
+        System.out.println("✓ Master Key derived dynamically via PBKDF2WithHmacSHA256 (100k iterations)");
 
         // Step 2: Generate Device-Specific Key
         SecretKey kDev = generateDeviceKey();

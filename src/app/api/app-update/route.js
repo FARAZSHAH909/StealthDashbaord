@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 const RTDB_URL = process.env.FIREBASE_DATABASE_URL || "https://stealthapp-50da2-default-rtdb.firebaseio.com";
 
 /**
  * GET: Fetch both Production (app_update) and Staging (app_update_staging) configurations in real-time
+ * Protected: Requires authenticated session cookie or valid Bearer ID token.
  */
-export async function GET() {
+export async function GET(request) {
   try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get("__Secure-AdminSession")?.value || cookieStore.get("admin_session")?.value;
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : null;
+
+    if (!sessionCookie && !bearerToken) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Active administrative session required" },
+        { status: 401 }
+      );
+    }
+
     const [prodRes, stagingRes] = await Promise.all([
       fetch(`${RTDB_URL}/app_update.json`, {
         cache: "no-store",

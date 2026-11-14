@@ -71,9 +71,14 @@ setInterval(() => {
  * Apply Enterprise Defense-in-Depth Security Headers
  */
 function applySecurityHeaders(response, isProtectedAdminRoute = false) {
+  const isProd = process.env.NODE_ENV === "production";
+  const scriptPolicy = isProd
+    ? "'self' 'unsafe-inline'"
+    : "'self' 'unsafe-eval' 'unsafe-inline'";
+
   const csp = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    script-src ${scriptPolicy};
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: https://*.googleusercontent.com;
     font-src 'self';
@@ -291,10 +296,10 @@ export function middleware(request) {
   }
 
   // =========================================================================
-  // 10. API ADMIN ACCESS CONTROL
+  // 10. API ADMIN & SENSITIVE TELEMETRY ACCESS CONTROL
   // =========================================================================
-  if (pathname.startsWith("/api/admin") && !isAuthenticated) {
-    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  if ((pathname.startsWith("/api/admin") || pathname.startsWith("/api/app-update")) && !isAuthenticated) {
+    return NextResponse.json({ error: "Unauthorized: Administrative session required" }, { status: 401 });
   }
 
   // =========================================================================

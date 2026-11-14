@@ -1,0 +1,40 @@
+# CodeRabbit Configuration — Security & Vulnerability Audit Focus
+# Language/Schema Version: 2
+version: 2
+
+reviews:
+  profile: "assertive" # Maximum depth: thorough security, logic, and bug inspection
+  request_changes_workflow: true
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+  
+  # Strict Instructions for Security and Bug Detection
+  path_instructions:
+    - path: "src/app/api/app-update/**"
+      instructions: >-
+        Perform strict cybersecurity audit: Verify session authentication, authorization tokens,
+        rate limiting, HTTP method restrictions, input sanitization, and protection against unauthorized enumeration.
+        Flag any unauthenticated data exposure or lack of route protection.
+    - path: "src/app/dashboard/app-updates/**"
+      instructions: >-
+        Inspect for DOM XSS, unsafe URL protocols (e.g. javascript:, data:, file:), missing rel attributes,
+        unvalidated external APK download links, and unescaped changelog rendering. Verify strict read-only compliance.
+    - path: "src/hooks/useAppUpdate.js"
+      instructions: >-
+        Analyze Realtime Database subscriptions, REST fallback queries, unauthenticated fetch leaks,
+        error handling suppression, and race conditions in data binding.
+    - path: "database.rules.json"
+      instructions: >-
+        Perform strict Firebase RTDB Security Rules audit. Verify that /app_update and /app_update_staging
+        are strictly protected against unauthenticated read/write, preventing supply-chain poisoning or malicious APK hijacking.
+    - path: "firestore.rules"
+      instructions: >-
+        Verify default deny, role-based access control, resource exhaustion protection, and lack of privilege escalation.
+    - path: "src/middleware.js"
+      instructions: >-
+        Audit Content Security Policy (CSP), anti-scanning regexes, rate limiting windows, and CSRF protection.
+
+chat:
+  auto_reply: true

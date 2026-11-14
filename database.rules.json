@@ -19,6 +19,16 @@
     "admin_config": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "app_update": {
+      ".read": true,
+      ".write": "auth != null",
+      ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().beginsWith('https://') && newData.child('version_code').isNumber()"
+    },
+    "app_update_staging": {
+      ".read": true,
+      ".write": "auth != null",
+      ".validate": "newData.hasChildren(['version_code', 'version_name', 'apk_url']) && newData.child('apk_url').isString() && newData.child('apk_url').val().beginsWith('https://') && newData.child('version_code').isNumber()"
     }
   }
 }

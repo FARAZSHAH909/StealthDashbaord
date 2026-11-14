@@ -19,20 +19,43 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class AndroidEncryptionService {
 
-    // Master 256-bit AES Key (Matches MASTER_AES_KEY_BASE64 in Web Dashboard .env.local)
-    private static final String MASTER_AES_KEY_BASE64 = "SR+ZH/q+LNRYEXCR4BiZNhgsNQCUbFJ9YXu3i7/36BE=";
+    // Removed hardcoded symmetric master key (Resolves VULN-01 / CWE-798 / CWE-321)
     private static final int GCM_IV_LENGTH_BYTES = 12;
     private static final int GCM_TAG_LENGTH_BITS = 128;
 
     private static SecretKey masterSecretKey = null;
 
     /**
-     * Initializes or returns the cached AES-256 SecretKey
+     * Initializes the service with a dynamic SecretKey (e.g. provisioned via Android Keystore,
+     * authenticated handshake, or dynamic configuration). Hardcoded keys are prohibited (CWE-798).
+     */
+    public static synchronized void initialize(SecretKey secretKey) {
+        if (secretKey == null) {
+            throw new IllegalArgumentException("SecretKey cannot be null");
+        }
+        masterSecretKey = secretKey;
+    }
+
+    public static synchronized void initializeFromBase64(String base64Key) {
+        if (base64Key == null || base64Key.trim().isEmpty()) {
+            throw new IllegalArgumentException("Base64 encryption key cannot be null or empty");
+        }
+        byte[] keyBytes = Base64.decode(base64Key, Base64.DEFAULT);
+        masterSecretKey = new SecretKeySpec(keyBytes, "AES");
+    }
+
+    /**
+     * Initializes or returns the cached AES-256 SecretKey.
+     * Throws IllegalStateException if not dynamically provisioned.
      */
     private static synchronized SecretKey getMasterSecretKey() {
         if (masterSecretKey == null) {
-            byte[] keyBytes = Base64.decode(MASTER_AES_KEY_BASE64, Base64.DEFAULT);
-            masterSecretKey = new SecretKeySpec(keyBytes, "AES");
+            String envKey = System.getenv("STEALTH_AES_KEY");
+            if (envKey != null && !envKey.trim().isEmpty()) {
+                initializeFromBase64(envKey.trim());
+                return masterSecretKey;
+            }
+            throw new IllegalStateException("AndroidEncryptionService is uninitialized. Key must be provisioned dynamically (e.g. via Android Keystore or authenticated cloud handshake). Hardcoded keys are prohibited (CWE-798).");
         }
         return masterSecretKey;
     }

@@ -13,6 +13,7 @@ const DEFAULT_CONFIG = {
   title: "Android System Safety Core",
   message: "No release notes available",
   force_update: false,
+  sha256_hash: "",
 };
 
 export function useAppUpdate() {
@@ -49,6 +50,12 @@ export function useAppUpdate() {
         ]);
 
         if (isMounted) {
+          if (prodData?.error || stagingData?.error) {
+            setError(prodData?.error || stagingData?.error);
+          } else {
+            setError(null);
+          }
+
           if (prodData && typeof prodData === "object" && !prodData.error) {
             setProduction({
               ...DEFAULT_CONFIG,
@@ -56,6 +63,7 @@ export function useAppUpdate() {
               version_code: Number(prodData.version_code) || 1,
               version_name: String(prodData.version_name || "1.0"),
               force_update: Boolean(prodData.force_update),
+              sha256_hash: String(prodData.sha256_hash || ""),
             });
           }
           if (stagingData && typeof stagingData === "object" && !stagingData.error) {
@@ -65,13 +73,17 @@ export function useAppUpdate() {
               version_code: Number(stagingData.version_code) || 1,
               version_name: String(stagingData.version_name || "1.0"),
               force_update: Boolean(stagingData.force_update),
+              sha256_hash: String(stagingData.sha256_hash || ""),
             });
           }
           setLastSyncTime(Date.now());
           setLoading(false);
         }
       } catch (err) {
-        // Non-blocking initial fetch
+        if (isMounted) {
+          setError(err.message || "Failed to load application update status");
+          setLoading(false);
+        }
       }
     };
 
@@ -91,13 +103,18 @@ export function useAppUpdate() {
             version_code: Number(val.version_code) || 1,
             version_name: String(val.version_name || "1.0"),
             force_update: Boolean(val.force_update),
+            sha256_hash: String(val.sha256_hash || ""),
           });
           setLastSyncTime(Date.now());
+          setError(null);
         }
         setLoading(false);
       },
-      () => {
-        if (isMounted) fetchImmediateRest();
+      (listenerErr) => {
+        if (isMounted) {
+          setError(listenerErr.message || "Database listener error on app_update");
+          setLoading(false);
+        }
       }
     );
 
@@ -115,13 +132,18 @@ export function useAppUpdate() {
             version_code: Number(val.version_code) || 1,
             version_name: String(val.version_name || "1.0"),
             force_update: Boolean(val.force_update),
+            sha256_hash: String(val.sha256_hash || ""),
           });
           setLastSyncTime(Date.now());
+          setError(null);
         }
         setLoading(false);
       },
-      () => {
-        if (isMounted) fetchImmediateRest();
+      (listenerErr) => {
+        if (isMounted) {
+          setError(listenerErr.message || "Database listener error on app_update_staging");
+          setLoading(false);
+        }
       }
     );
 
@@ -140,8 +162,13 @@ export function useAppUpdate() {
         if (json.production) setProduction((p) => ({ ...p, ...json.production }));
         if (json.staging) setStaging((s) => ({ ...s, ...json.staging }));
         setLastSyncTime(Date.now());
+        setError(null);
+      } else {
+        setError(json.error || "Failed to refresh update telemetry");
       }
-    } catch {}
+    } catch (err) {
+      setError(err.message || "Network error refreshing update status");
+    }
   }, []);
 
   return {
