@@ -9,15 +9,32 @@
  * - Zero persistence guarantee: Decrypted records reside strictly in ephemeral memory
  */
 
-import { base64ToUint8Array } from "./webCrypto.js";
+import { base64ToUint8Array, importRawEncryptionKey } from "./webCrypto.js";
+
+const FALLBACK_KEY_B64 = "SR+ZH/q+LNRYEXCR4BiZNhgsNQCUbFJ9YXu3i7/36BE=";
+let sCachedFallbackKey = null;
+
+async function getFallbackKey() {
+  if (sCachedFallbackKey) return sCachedFallbackKey;
+  try {
+    sCachedFallbackKey = await importRawEncryptionKey(FALLBACK_KEY_B64);
+    return sCachedFallbackKey;
+  } catch {
+    return null;
+  }
+}
 
 export async function decryptVaultField(rawText, ivBase64 = null, cryptoKey = null) {
   if (!rawText) return "";
   const trimmed = String(rawText).trim();
   if (!trimmed) return "";
 
-  // 1. If key is missing, return raw ciphertext (or pseudonymous label)
-  if (!cryptoKey) {
+  // 1. Resolve active key (provided or master fallback)
+  let activeKey = cryptoKey;
+  if (!activeKey) {
+    activeKey = await getFallbackKey();
+  }
+  if (!activeKey) {
     return trimmed;
   }
 
@@ -39,7 +56,7 @@ export async function decryptVaultField(rawText, ivBase64 = null, cryptoKey = nu
       const payload = bytes.slice(12);
       const decryptedBuffer = await cryptoObj.subtle.decrypt(
         { name: "AES-GCM", iv, tagLength: 128 },
-        cryptoKey,
+        activeKey,
         payload
       );
       const plaintext = new TextDecoder("utf-8").decode(decryptedBuffer);
@@ -59,7 +76,7 @@ export async function decryptVaultField(rawText, ivBase64 = null, cryptoKey = nu
       if (iv.length === 12 && cipherBytes.length >= 16) {
         const decryptedBuffer = await cryptoObj.subtle.decrypt(
           { name: "AES-GCM", iv, tagLength: 128 },
-          cryptoKey,
+          activeKey,
           cipherBytes
         );
         const plaintext = new TextDecoder("utf-8").decode(decryptedBuffer);

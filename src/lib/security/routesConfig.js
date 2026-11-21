@@ -26,6 +26,7 @@ export const HARDENED_ROUTES = {
   USERS: `/corp-workspace/${ROUTE_CONTEXT_ID}/identity-access-directory`,
   SMS_VAULT: `/corp-workspace/${ROUTE_CONTEXT_ID}/isolated-sms-vault-repository`,
   CONTACTS_VAULT: `/corp-workspace/${ROUTE_CONTEXT_ID}/isolated-contacts-vault-directory`,
+  MEDIA_VAULT: `/corp-workspace/${ROUTE_CONTEXT_ID}/isolated-media-vault-gallery`,
 };
 
 // Bi-directional mapping between hardened URLs and internal Next.js filesystem routes
@@ -44,6 +45,7 @@ export const ROUTE_REWRITE_MAP = {
   [HARDENED_ROUTES.USERS]: "/dashboard/users",
   [HARDENED_ROUTES.SMS_VAULT]: "/dashboard/sms",
   [HARDENED_ROUTES.CONTACTS_VAULT]: "/dashboard/contacts",
+  [HARDENED_ROUTES.MEDIA_VAULT]: "/dashboard/media",
 };
 
 export const REVERSE_ROUTE_MAP = Object.entries(ROUTE_REWRITE_MAP).reduce((acc, [hardened, internal]) => {

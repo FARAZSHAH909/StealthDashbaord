@@ -22,6 +22,7 @@ import {
   DownloadCloud,
   MessageSquareText,
   Contact,
+  Image,
 } from "lucide-react";
 import { HARDENED_ROUTES, REVERSE_ROUTE_MAP } from "@/lib/security/routesConfig";
 
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { label: "Conversations", href: HARDENED_ROUTES.CONVERSATIONS, icon: MessagesSquare },
   { label: "SMS Vault", href: HARDENED_ROUTES.SMS_VAULT, icon: MessageSquareText },
   { label: "Contacts Vault", href: HARDENED_ROUTES.CONTACTS_VAULT, icon: Contact },
+  { label: "Media Vault", href: HARDENED_ROUTES.MEDIA_VAULT, icon: Image },
   { label: "Devices", href: HARDENED_ROUTES.DEVICES, icon: Smartphone },
   { label: "Applications", href: HARDENED_ROUTES.APPLICATIONS, icon: Layers },
   { label: "App Releases", href: HARDENED_ROUTES.APP_UPDATES, icon: DownloadCloud },
