@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
 import { getDocument, setDocument, updateDocument } from "@/lib/firebase/firestoreService";
+import globalRateLimiter from "@/lib/auth/rateLimiter";
+
+function getClientIp(request) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "127.0.0.1";
+}
 
 // Strict field allowlist - any unexpected fields cause immediate 400 rejection
 const ALLOWED_FIELDS = new Set([
@@ -13,11 +24,28 @@ const ALLOWED_FIELDS = new Set([
 ]);
 
 export async function POST(request) {
+  const ip = getClientIp(request);
+
+  // Rate Limiting Guard
+  const lockStatus = globalRateLimiter.isLocked(ip);
+  if (lockStatus.locked) {
+    return NextResponse.json(
+      {
+        error: `Too many enrollment attempts. IP is temporarily blocked for ${lockStatus.remainingSeconds} seconds.`,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(lockStatus.remainingSeconds) },
+      }
+    );
+  }
+
   try {
     let body;
     try {
       body = await request.json();
     } catch {
+      globalRateLimiter.recordFailure(ip);
       return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
     }
 
@@ -142,6 +170,8 @@ export async function POST(request) {
       updated_at: now
     });
 
+    globalRateLimiter.recordSuccess(ip);
+
     return NextResponse.json({
       success: true,
       message: "Device enrolled successfully",
@@ -150,6 +180,7 @@ export async function POST(request) {
       status: "ACTIVE"
     });
   } catch (error) {
+    globalRateLimiter.recordFailure(ip);
     console.error("Device enrollment error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }

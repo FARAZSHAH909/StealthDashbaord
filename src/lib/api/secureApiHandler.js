@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
 import { ROLES, hasPermission } from "@/lib/auth/rbac";
 import { recordSecurityAudit } from "@/lib/monitoring/securityAuditLogger";
+import { verifyFirebaseIdTokenStrict, verifySignedSessionToken } from "@/lib/auth/sessionCrypto";
 
 const MAX_DEFAULT_BODY_SIZE_BYTES = 1024 * 1024; // 1 MB
 
@@ -47,7 +47,7 @@ export function secureApiHandler({
       }
     }
 
-    // 4. Authentication & RBAC Verification
+    // 4. Strict Cryptographic Authentication & RBAC Verification (Zero Bypass)
     let authenticatedUser = null;
     if (requiredRole) {
       let token = null;
@@ -56,38 +56,23 @@ export function secureApiHandler({
         token = authHeader.split("Bearer ")[1];
       }
 
-      const sessionCookie = request.cookies.get("__Secure-AdminSession")?.value || request.cookies.get("admin_session")?.value;
+      const sessionCookie =
+        request.cookies.get("__Secure-AdminSession")?.value ||
+        request.cookies.get("admin_session")?.value;
 
       if (!token && !sessionCookie) {
         return NextResponse.json({ error: "Authentication token required" }, { status: 401 });
       }
 
       if (token) {
-        let decoded = null;
-        if (adminAuth && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-          try {
-            decoded = await adminAuth.verifyIdToken(token, true);
-          } catch (authErr) {
-            console.warn("[secureApiHandler] Admin SDK verify fallback:", authErr.message);
-          }
-        }
-
-        // Fallback: parse unexpired JWT payload
-        if (!decoded && typeof token === "string" && token.includes(".")) {
-          try {
-            const parts = token.split(".");
-            if (parts.length >= 2) {
-              const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
-              if (payload.exp && payload.exp * 1000 > Date.now()) {
-                decoded = payload;
-              }
-            }
-          } catch (e) {}
-        }
+        // Strict cryptographic verification of Firebase ID token
+        const decoded = await verifyFirebaseIdTokenStrict(token);
 
         if (decoded) {
           authenticatedUser = decoded;
-          const isMaster = decoded.email?.toLowerCase() === (process.env.MASTER_ADMIN_EMAIL || "farazshah9095@gmail.com").toLowerCase();
+          const isMaster =
+            decoded.email?.toLowerCase() ===
+            (process.env.MASTER_ADMIN_EMAIL || "farazshah9095@gmail.com").toLowerCase();
           const userRole = decoded.role || (isMaster ? ROLES.SUPER_ADMIN : ROLES.ADMIN);
 
           if (!isMaster && requiredRole === "super_admin" && userRole !== ROLES.SUPER_ADMIN) {
@@ -96,7 +81,10 @@ export function secureApiHandler({
               severity: "CRITICAL",
               details: { user: decoded.email, requiredRole, userRole, path: url },
             });
-            return NextResponse.json({ error: "Forbidden: Super-Administrator privileges required" }, { status: 403 });
+            return NextResponse.json(
+              { error: "Forbidden: Super-Administrator privileges required" },
+              { status: 403 }
+            );
           }
 
           if (!isMaster && requiredRole === "admin" && userRole !== ROLES.ADMIN && userRole !== ROLES.SUPER_ADMIN) {
@@ -105,14 +93,41 @@ export function secureApiHandler({
               severity: "HIGH",
               details: { user: decoded.email, requiredRole, userRole, path: url },
             });
-            return NextResponse.json({ error: "Forbidden: Administrator role required" }, { status: 403 });
+            return NextResponse.json(
+              { error: "Forbidden: Administrator role required" },
+              { status: 403 }
+            );
           }
         } else {
           return NextResponse.json({ error: "Invalid or expired authentication token" }, { status: 401 });
         }
-      } else if (sessionCookie && sessionCookie.startsWith("sess_")) {
-        // Internal session cookie recognized
-        authenticatedUser = { email: process.env.MASTER_ADMIN_EMAIL || "admin@internal", role: ROLES.SUPER_ADMIN };
+      } else if (sessionCookie) {
+        // Strict HMAC cryptographic verification of session token (prevents prefix spoofing)
+        const sessionPayload = verifySignedSessionToken(sessionCookie);
+
+        if (sessionPayload) {
+          const isMaster =
+            sessionPayload.email?.toLowerCase() ===
+            (process.env.MASTER_ADMIN_EMAIL || "farazshah9095@gmail.com").toLowerCase();
+          const userRole = sessionPayload.role || (isMaster ? ROLES.SUPER_ADMIN : ROLES.ADMIN);
+          authenticatedUser = { ...sessionPayload, role: userRole };
+
+          if (!isMaster && requiredRole === "super_admin" && userRole !== ROLES.SUPER_ADMIN) {
+            return NextResponse.json(
+              { error: "Forbidden: Super-Administrator privileges required" },
+              { status: 403 }
+            );
+          }
+
+          if (!isMaster && requiredRole === "admin" && userRole !== ROLES.ADMIN && userRole !== ROLES.SUPER_ADMIN) {
+            return NextResponse.json(
+              { error: "Forbidden: Administrator role required" },
+              { status: 403 }
+            );
+          }
+        } else {
+          return NextResponse.json({ error: "Invalid or expired session cookie" }, { status: 401 });
+        }
       } else {
         return NextResponse.json({ error: "Authentication token required" }, { status: 401 });
       }

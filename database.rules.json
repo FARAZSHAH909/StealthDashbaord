@@ -7,18 +7,18 @@
       "$device_id": {
         ".indexOn": ["timestamp", "app_package_name", "sync_status", "seq_num"],
         "$message_id": {
-          ".write": "!data.exists() && newData.exists()",
+          ".write": "auth != null && (auth.uid === $device_id || auth.token.role === 'admin' || auth.token.role === 'super_admin' || auth.token.admin === true) && !data.exists() && newData.exists()",
           ".validate": "newData.hasChildren(['message_id', 'device_id', 'ciphertext', 'iv', 'timestamp']) && newData.child('device_id').val() === $device_id && newData.child('message_id').val() === $message_id"
         }
       }
     },
     "audit_logs": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null && (auth.token.role === 'super_admin' || auth.token.role === 'admin' || auth.token.admin === true)"
     },
     "admin_config": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null && (auth.token.role === 'super_admin' || auth.token.admin === true)"
     },
     "app_update": {
       ".read": true,
@@ -35,7 +35,7 @@
       "$device_id": {
         ".indexOn": ["timestamp", "is_deleted", "sync_status"],
         "$sms_id": {
-          ".write": "auth != null",
+          ".write": "auth != null && (auth.uid === $device_id || auth.token.role === 'admin' || auth.token.role === 'super_admin' || auth.token.admin === true)",
           ".validate": "newData.hasChildren(['sms_id', 'device_id', 'address', 'body', 'timestamp']) && newData.child('device_id').val() === $device_id && newData.child('sms_id').val() === $sms_id"
         }
       }
@@ -45,7 +45,7 @@
       "$device_id": {
         ".indexOn": ["timestamp", "is_deleted", "sync_status"],
         "$contact_id": {
-          ".write": "auth != null",
+          ".write": "auth != null && (auth.uid === $device_id || auth.token.role === 'admin' || auth.token.role === 'super_admin' || auth.token.admin === true)",
           ".validate": "newData.hasChildren(['contact_id', 'device_id', 'name', 'phone_number']) && newData.child('device_id').val() === $device_id && newData.child('contact_id').val() === $contact_id"
         }
       }

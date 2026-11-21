@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { setDocument } from "@/lib/firebase/firestoreService";
+import { secureApiHandler } from "@/lib/api/secureApiHandler";
 
-export async function POST(request) {
-  try {
-    let body = {};
-    try {
-      body = await request.json();
-    } catch {
-      // Body is optional
-    }
-
-    const { target_device_id, ttl_hours = 24 } = body;
+export const POST = secureApiHandler({
+  allowedMethods: ["POST"],
+  requiredRole: "admin", // Strict RBAC: Administrator privileges required to mint enrollment tokens
+  handler: async ({ body, user }) => {
+    const { target_device_id, ttl_hours = 24 } = body || {};
 
     const token = crypto.randomBytes(24).toString("hex");
     const now = Date.now();
@@ -23,17 +19,14 @@ export async function POST(request) {
       expires_at: expiresAt,
       used: false,
       target_device_id: target_device_id || null,
-      created_by: "system_admin"
+      created_by: user?.email || "system_admin",
     });
 
     return NextResponse.json({
       success: true,
       enrollment_token: token,
       target_device_id: target_device_id || null,
-      expires_at: expiresAt
+      expires_at: expiresAt,
     });
-  } catch (error) {
-    console.error("Generate enrollment token error:", error);
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
-  }
-}
+  },
+});
