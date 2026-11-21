@@ -226,8 +226,10 @@ export function middleware(request) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Authenticated: next.config.mjs rewrites to internal dashboard component natively
-    const response = NextResponse.next();
+    // Authenticated: rewrite directly to internal component at the edge
+    const rewriteUrl = new URL(internalTarget, request.url);
+    rewriteUrl.search = request.nextUrl.search;
+    const response = NextResponse.rewrite(rewriteUrl);
     return applySecurityHeaders(response, true);
   }
 
@@ -248,8 +250,10 @@ export function middleware(request) {
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    // Native rewrites in next.config.mjs handle the routing to /login or /register
-    const response = NextResponse.next();
+    // Rewrite to internal auth page
+    const rewriteUrl = new URL(internalTarget, request.url);
+    rewriteUrl.search = request.nextUrl.search;
+    const response = NextResponse.rewrite(rewriteUrl);
     return applySecurityHeaders(response, false);
   }
 

@@ -13,11 +13,11 @@ status: complete
 
 # 🏛️ Dual-Project Master Architecture Vault
 
-> [!IMPORTANT] कड़ा संरचनात्मक विभाजन (Strict Structural Separation)
-> यह वॉल्ट आपके दोनों प्रोजेक्ट्स को पूरी तरह अलग-अलग (Separated) रखता है:
-> 1. **🌐 [[01 - Secure Admin Dashboard/Architecture_Overview|Secure Admin Dashboard]]** (वेब ब्राउज़र कंसोल, Next.js 14, WebCrypto, RBAC)
-> 2. **📱 [[02 - Firebase App/Architecture_Overview|Firebase App]]** (Android बैकग्राउंड क्लाइंट, Room SQLCipher, Keystore, Background Sync)
-> 3. **🔗 [[03 - Shared Protocols & RTDB/Realtime_Database_Schema|Shared Protocols & RTDB]]** (Firebase रियल-टाइम डेटाबेस, E2EE हैंडशेक, टोकन सिक्योरिटी)
+> [!IMPORTANT] Strict Structural Separation
+> This vault maintains an absolute separation between the two projects:
+> 1. **🌐 [[01 - Secure Admin Dashboard/Architecture_Overview|Secure Admin Dashboard]]** (Web Browser Console, Next.js 14, WebCrypto, RBAC)
+> 2. **📱 [[02 - Firebase App/Architecture_Overview|Firebase App]]** (Android Background Client, Room SQLCipher, KeyStore, Background Sync)
+> 3. **🔗 [[03 - Shared Protocols & RTDB/Realtime_Database_Schema|Shared Protocols & RTDB]]** (Firebase Realtime Database, E2EE Handshake, Token Security)
 
 ```mermaid
 graph LR
@@ -50,8 +50,8 @@ graph LR
 ## 🧭 Vault Navigation Map
 
 ### 00 - Start Here
-- [[01_Obsidian_Kya_Hai_Aur_Fayde|Obsidian क्या है और इसके प्रोजेक्ट व AI के लिए फ़ायदे]]
-- [[02_How_To_Open_In_Obsidian|Obsidian में इस वॉल्ट को कैसे खोलें (30 सेकंड गाइड)]]
+- [[01_Obsidian_Kya_Hai_Aur_Fayde|What is Obsidian and Benefits for Project & AI]]
+- [[02_How_To_Open_In_Obsidian|How to Open This Vault in Obsidian (30-Second Guide)]]
 
 ### 01 - Secure Admin Dashboard (Web)
 - [[01 - Secure Admin Dashboard/Architecture_Overview|1. Architecture Overview & Tech Stack]]
@@ -59,7 +59,7 @@ graph LR
 - [[01 - Secure Admin Dashboard/Authentication_and_RBAC|3. Authentication, Multi-Tier RBAC & Progressive Lockout]]
 - [[01 - Secure Admin Dashboard/Key_Vault_and_Crypto_Engine|4. Key Vault Context & Client-Side WebCrypto (E2EE)]]
 - [[01 - Secure Admin Dashboard/API_Endpoints_Reference|5. Complete API Route & Endpoint Reference]]
-- [[01 - Secure Admin Dashboard/Realtime_Sync_and_Firebase|6. Real-time Firebase Sync & Hooks]]
+- [[01 - Secure Admin Dashboard/Realtime_Sync_and_Firebase|6. Real-time Firebase Sync & Custom Hooks]]
 - [[01 - Secure Admin Dashboard/Security_and_DevSecOps|7. Web Security Hardening & DevSecOps Guardrails]]
 
 ### 02 - Firebase App (Android Mobile)

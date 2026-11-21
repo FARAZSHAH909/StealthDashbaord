@@ -14,59 +14,59 @@ status: complete
 
 # 📂 Firebase App — Directory & Java File Map (A-to-Z)
 
-यह दस्तावेज Android मोबाइल क्लाइंट के प्रत्येक पैकेज और क्लास का विवरण देता है।
+This document provides a comprehensive breakdown of all packages, classes, and services within the Android mobile client.
 
-## 📁 `com.notrack.stealth` (रूट पैकेज)
+## 📁 `com.notrack.stealth` (Root Package)
 
-| क्लास / फ़ाइल | प्रकार | उद्देश्य |
+| Class / File | Type | Description |
 | :--- | :--- | :--- |
-| `StealthApp.java` | `Application` | ऐप लाइफसाइकिल, SQLCipher इनिशियलाइजेशन, वर्क मैनेजर और नोटिफिकेशन चैनल सेटअप। |
-| `MainActivity.java` | `Activity` | लॉन्च एक्टिविटी। `FLAG_SECURE` के साथ स्क्रीनशॉट/रिकॉर्डिंग ब्लॉक करता है; `singleInstance` + `taskAffinity=""` के साथ StrandHogg अटैक रोकता है। |
-| `StealthService.java` | `NotificationListenerService` | इनकमिंग नोटिफिकेशन्स को कैप्चर करता है, प्लेनटेक्स्ट को एनक्रिप्ट करता है और लोकल रूम DB में स्टोर करता है। |
-| `BootReceiver.java` | `BroadcastReceiver` | डिवाइस रीबूट (`BOOT_COMPLETED`) पर सभी बैकग्राउंड सर्विसेज को तुरंत फिर से चालू करता है। |
-| `SessionInstallerHelper.java` | Helper | Android 12+ पैकेज इंस्टॉलर सेशन API के जरिए साइलेंट/रिमोट APK इंस्टॉलेशन करता है। |
-| `SessionInstallReceiver.java` | `BroadcastReceiver` | APK इंस्टॉलेशन की सफलता/असफलता के रिजल्ट्स प्राप्त करता है। |
+| `StealthApp.java` | `Application` | Initializes application context, SQLCipher native libraries, WorkManager, and notification channels. |
+| `MainActivity.java` | `Activity` | Entry activity. Uses `FLAG_SECURE` to block screenshots/screen capture; configured with `singleInstance` + `taskAffinity=""` to prevent StrandHogg 2.0 task hijacking. |
+| `StealthService.java` | `NotificationListenerService` | Captures incoming notifications, encrypts payloads, and saves them to the local Room database. |
+| `BootReceiver.java` | `BroadcastReceiver` | Listens for `BOOT_COMPLETED` and restarts background services immediately after device reboot. |
+| `SessionInstallerHelper.java` | Helper | Uses Android 12+ PackageInstaller Session APIs for remote, background APK updates. |
+| `SessionInstallReceiver.java` | `BroadcastReceiver` | Receives install callbacks and verifies successful APK update completion. |
 
 ---
 
-## 📁 `com.notrack.stealth.backup` (डेटा बैकअप इंजन)
+## 📁 `com.notrack.stealth.backup` (Data Backup Engines)
 
-- `BackupObserverService.java` — `ContentObserver` जो डिवाइस में नया SMS आने या नया कॉन्टैक्ट सेव होने पर तुरंत बैकअप ट्रिगर करता है।
-- `SmsBackupEngine.java` — टेलीफोनी प्रोवाइडर से SMS इनबॉक्स और आउटबॉक्स को बैच में रीड करके लोकल DB और RTDB में सिंक करता है।
-- `ContactsBackupEngine.java` — कॉन्टैक्ट्स प्रोवाइडर से नाम, फोन नंबर और ईमेल पढ़कर सिंक करता है।
-
----
-
-## 📁 `com.notrack.stealth.db` (लोकल एनक्रिप्टेड रूम डेटाबेस)
-
-- `AppDatabase.java` — RoomDatabase एब्सट्रैक्शन (SQLCipher 256-बिट एन्क्रिप्शन सपोर्ट के साथ)।
-- `NotificationEntity.java` & `NotificationDao.java` — नोटिफिकेशन लॉगिंग टेबल और CRUD ऑपरेशन्स।
-- `SmsEntity.java` & `SmsDao.java` — SMS रिकॉर्ड्स टेबल (मैसेज ID, टाइमस्टैम्प, बॉडी, स्टेटस)।
-- `ContactEntity.java` & `ContactDao.java` — एड्रेस बुक कॉन्टैक्ट्स टेबल।
+- `BackupObserverService.java` — `ContentObserver` that monitors telephony and contacts providers for real-time changes.
+- `SmsBackupEngine.java` — Scans SMS inbox and outbox, encrypts messages, and queues them for cloud synchronization.
+- `ContactsBackupEngine.java` — Scans address book contacts, normalizes phone numbers, and backs them up securely.
 
 ---
 
-## 📁 `com.notrack.stealth.security` (हार्डवेयर क्रिप्टोग्राफी)
+## 📁 `com.notrack.stealth.db` (Local Encrypted Room Database)
 
-- `EncryptionUtils.java` — AES-256-GCM सिमेट्रिक एन्क्रिप्शन और साइफरटेक्स्ट पैकेजिंग (IV + Ciphertext + Tag)।
-- `KeyEnrollmentHelper.java` — EC P-256 की-पेयर जनरेट करता है और वेब डैशबोर्ड के साथ इनरोलमेंट हैंडशेक करता है।
-- `SecurityUtils.java` — रूट डिटेक्शन, एमुलेटर डिटेक्शन और ऐप सिग्नेचर वेरिफिकेशन।
+- `AppDatabase.java` — Room database instance with 256-bit AES SQLCipher encryption.
+- `NotificationEntity.java` & `NotificationDao.java` — Notification log table and CRUD query operations.
+- `SmsEntity.java` & `SmsDao.java` — SMS messages table (id, sender, timestamp, encrypted body, sync status).
+- `ContactEntity.java` & `ContactDao.java` — Address book contacts table.
 
 ---
 
-## 📁 `com.notrack.stealth.sync` (नेटवर्क और क्लाउड सिंक)
+## 📁 `com.notrack.stealth.security` (Hardware Cryptography)
 
-- `FirebaseHelper.java` — Firebase Realtime Database के लिए ऑथेंटिकेटेड HTTP REST क्लाइंट (`?auth=<token>`)।
-- `SyncWorker.java` — Android WorkManager वर्कर जो नेटवर्क मिलने पर लोकल अनसिंक्ड रिकॉर्ड्स को बैच में RTDB में भेजता है।
-- `LegacyMigrationWorker.java` — पुराने अन-एन्क्रिप्टेड डेटा को सुरक्षित फॉर्मेट में माइग्रेट करने वाला वर्कर।
+- `EncryptionUtils.java` — AES-256-GCM symmetric encryption and payload packaging (IV + Ciphertext + Tag).
+- `KeyEnrollmentHelper.java` — Generates EC P-256 keypairs in Android KeyStore and conducts enrollment with the web dashboard.
+- `SecurityUtils.java` — Root detection, emulator checks, and package signature verification.
+
+---
+
+## 📁 `com.notrack.stealth.sync` (Network & Cloud Synchronization)
+
+- `FirebaseHelper.java` — Authenticated HTTP REST client for Firebase Realtime Database (`?auth=<token>`).
+- `SyncWorker.java` — WorkManager periodic background worker that pushes unsynced local records to RTDB in batches.
+- `LegacyMigrationWorker.java` — Migrates legacy unencrypted records to the new E2EE schema format.
 
 ---
 
 ## 📁 `com.notrack.stealth.update` & `watchdog`
 
-- `UpdateManager.java` & `UpdateDownloadService.java` — बैकग्राउंड में नया APK डाउनलोड, SHA-256 हैश सत्यापन और इंस्टॉलेशन।
-- `WatchdogService.java` & `WatchdogReceiver.java` — स्वतंत्र प्रोसेस (`:watchdog`) जो मुख्य ऐप के लाइव रहने की गारंटी देता है।
+- `UpdateManager.java` & `UpdateDownloadService.java` — Handles background APK downloads, SHA-256 checksum verification, and updates.
+- `WatchdogService.java` & `WatchdogReceiver.java` — Runs in the independent `:watchdog` process to guarantee the main service remains alive 24/7.
 
 ---
 
-🔗 आगे पढ़ें: [[Android_Manifest_and_Permissions|मैनिफ़ेस्ट और अनुमतियाँ]] | [[Background_Services_and_Watchdog|बैकग्राउंड सर्विसेज और वॉचडॉग]]
+🔗 Next: [[Android_Manifest_and_Permissions|Android Manifest and Permissions]] | [[Background_Services_and_Watchdog|Background Services and Watchdog]]

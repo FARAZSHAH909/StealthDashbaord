@@ -13,21 +13,21 @@ status: complete
 
 # 📡 Secure Admin Dashboard — API Endpoints Reference
 
-सभी बैकएंड API एंडपॉइंट्स Next.js 14 App Router (`src/app/api/...`) में कार्यान्वित हैं और `src/lib/api/secureApiHandler.js` द्वारा सुरक्षित हैं।
+All backend API routes are implemented in the Next.js 14 App Router (`src/app/api/...`) and wrapped with `src/lib/api/secureApiHandler.js`.
 
-## 1. प्रमाणीकरण और सत्र एंडपॉइंट्स (Auth & Session APIs)
+## 1. Authentication & Session Endpoints
 
 ### `POST /api/auth/sync-login`
-- **विवरण:** एडमिन लॉगिन क्रेडेंशियल्स को सत्यापित करता है और क्रिप्टोग्राफ़िक रूप से हस्ताक्षरित सत्र कुकी सेट करता है।
-- **सुरक्षा:** IP-आधारित और क्रेडेंशियल-आधारित स्लाइडिंग विंडो रेट लिमिट।
-- **अनुरोध:**
+- **Description:** Authenticates admin credentials and issues a signed HTTP-only session cookie.
+- **Security:** Protected by sliding-window rate limiters for IP and user account.
+- **Request Body:**
   ```json
   {
     "email": "admin@domain.com",
     "password": "SecurePassword123!"
   }
   ```
-- **प्रतिक्रिया (200 OK):**
+- **Response (200 OK):**
   ```json
   {
     "success": true,
@@ -36,20 +36,20 @@ status: complete
   ```
 
 ### `POST /api/auth/verify-session`
-- **विवरण:** वर्तमान कुकी से प्राप्त सत्र टोकन के HMAC-SHA256 हस्ताक्षर की पुष्टि करता है।
-- **सुरक्षा:** `crypto.timingSafeEqual` द्वारा संरक्षित।
+- **Description:** Validates the HMAC-SHA256 signature on the active session cookie.
+- **Security:** Evaluated with `crypto.timingSafeEqual`.
 
 ### `POST /api/auth/progressive-lockout`
-- **विवरण:** असफल लॉगिन प्रयासों को रिकॉर्ड करता है और घातांकीय लॉकआउट समय लौटाता है।
+- **Description:** Tracks failed authentication attempts and calculates lockout cooldowns.
 
 ---
 
-## 2. डिवाइस प्रबंधन एंडपॉइंट्स (Device Management APIs)
+## 2. Device Management Endpoints
 
 ### `POST /api/devices/enroll`
-- **विवरण:** नए Android डिवाइस को सिस्टम में रजिस्टर करता है।
-- **सुरक्षा:** दर सीमा (`globalRateLimiter`), डिवाइस फिंगरप्रिंट वैलिडेशन।
-- **अनुरोध:**
+- **Description:** Enrolls a new Android device into the system and records its public key.
+- **Security:** Rate-limited and requires valid hardware fingerprint payload.
+- **Request Body:**
   ```json
   {
     "deviceId": "dev_abc123",
@@ -60,25 +60,25 @@ status: complete
   ```
 
 ### `POST /api/devices/generate-token`
-- **विवरण:** इनरोल्ड डिवाइस के लिए Firebase RTDB REST एक्सेस टोकन जनरेट करता है।
-- **सुरक्षा:** **केवल सुपर-एडमिन या एडमिन** (`requiredRole: 'admin'`)।
+- **Description:** Generates a secure Firebase RTDB REST access token for an enrolled device.
+- **Security:** **Restricted to Admin and Super Admin** (`requiredRole: 'admin'`).
 
 ---
 
-## 3. क्रिप्टोग्राफिक वॉल्ट एंडपॉइंट्स (Vault APIs)
+## 3. Cryptographic Vault Endpoints
 
 ### `POST /api/admin/vault-init`
-- **विवरण:** पहली बार सिस्टम सेटअप के दौरान मास्टर की वॉल्ट बनाता है।
-- **सुरक्षा:** केवल `super_admin`।
+- **Description:** Initializes the system master cryptographic key vault.
+- **Security:** Super Admin only (`requiredRole: 'super_admin'`).
 
 ### `POST /api/admin/vault-update`
-- **विवरण:** वॉल्ट पासफ़्रेज़ बदलने या कीज़ को री-रैप करने के लिए।
-- **सुरक्षा:** केवल `super_admin`।
+- **Description:** Rotates master passphrase and re-encrypts vault keys.
+- **Security:** Super Admin only.
 
 ### `GET /api/v1/admin/audit-logs`
-- **विवरण:** सभी संवेदनशील प्रशासनिक क्रियाओं का संपूर्ण ऑडिट लॉग पुनर्प्राप्त करता है।
-- **सुरक्षा:** केवल `super_admin`।
+- **Description:** Fetches immutable administrative security event logs.
+- **Security:** Super Admin only.
 
 ---
 
-🔗 आगे पढ़ें: [[Realtime_Sync_and_Firebase|रियल-टाइम सिंक]] | [[Security_and_DevSecOps|सिक्योरिटी और DevSecOps]]
+🔗 Next: [[Realtime_Sync_and_Firebase|Realtime Sync & Custom Hooks]] | [[Security_and_DevSecOps|Security Hardening & DevSecOps]]

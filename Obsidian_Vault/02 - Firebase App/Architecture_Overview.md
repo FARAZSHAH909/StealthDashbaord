@@ -1,5 +1,5 @@
 ---
-title: Firebase App - Architecture Overview
+title: Firebase App - Mobile Architecture Overview
 tags:
   - firebase-app
   - android
@@ -14,12 +14,12 @@ status: active
 
 # 📱 Firebase App — Mobile Architecture Overview
 
-> [!NOTE] प्रोजेक्ट पहचान
-> - **प्रोजेक्ट नाम:** Firebase App
-> - **प्लेटफॉर्म:** Android Mobile OS (API Level 26+ से Android 14 / 15)
-> - **कोडबेस लोकेशन:** `C:\Users\mj\.gemini\antigravity\brain\6fa972e2-221e-4800-b907-fe27c49ff2d8\scratch\StealthApp`
-> - **रिमोट गिट रेपो:** `https://github.com/FARAZSHAH909/StealthApp.git` (शाखा: `main`)
-> - **प्राइमरी स्टैक:** Java, Android SDK, AndroidX Room, SQLCipher, Android KeyStore, WorkManager, OkHttp3
+> [!NOTE] Project Identification
+> - **Project Name:** Firebase App
+> - **Platform:** Android Mobile OS (API Level 26+ through Android 14 / 15)
+> - **Codebase Path:** `C:\Users\mj\.gemini\antigravity\brain\6fa972e2-221e-4800-b907-fe27c49ff2d8\scratch\StealthApp`
+> - **Remote Git Repo:** `https://github.com/FARAZSHAH909/StealthApp.git` (Branch: `main`)
+> - **Primary Tech Stack:** Java, Android SDK, AndroidX Room, SQLCipher, Android KeyStore, WorkManager, OkHttp3
 
 ```mermaid
 flowchart TD
@@ -61,25 +61,25 @@ flowchart TD
 
 ---
 
-## 🏗️ कोर मोबाइल आर्किटेक्चरल सिद्धांत
+## 🏗️ Core Mobile Architectural Principles
 
-### 1. Dual-Process Watchdog Architecture (दोहरा प्रक्रिया पहरेदार)
-- मुख्य ऐप प्रोसेस (`com.notrack.stealth`) अगर किसी बैटरी ऑप्टिमाइज़र या टास्क किलर द्वारा बंद कर दी जाती है, तो सेकेंडरी आइसोलेटेड प्रोसेस (`:watchdog`) उसे तुरंत बिना यूज़र इंटरैक्शन के पुनर्जीवित (Revive) कर देती है।
+### 1. Dual-Process Watchdog Architecture
+- If the main process (`com.notrack.stealth`) is killed by aggressive OEM battery managers or task cleaners, the isolated `:watchdog` process automatically revives the main service within seconds.
 
-### 2. Zero Unauthenticated Network Requests (शून्य अनधिकृत नेटवर्क कॉल)
-- ऐप से बाहर जाने वाली हर REST PUT कॉल में `?auth=<token>` पैरामीटर अनिवार्य रूप से जुड़ा होता है (`FirebaseHelper.getAuthTokenParam()`)।
-- बिना वैध टोकन के Firebase RTDB द्वारा हर रिक्वेस्ट रिजेक्ट कर दी जाती है।
+### 2. Zero Unauthenticated Network Calls
+- Every outbound REST call requires a valid authentication token attached via `?auth=<token>` (`FirebaseHelper.getAuthTokenParam()`).
+- Unauthenticated requests are rejected immediately by Firebase RTDB security rules.
 
 ### 3. Hardware-Backed TEE / StrongBox Encryption
-- क्रिप्टोग्राफिक कीज़ सॉफ्टवेयर में नहीं, बल्कि डिवाइस के हार्डवेयर **Android KeyStore (TEE / Secure Enclave)** में सुरक्षित रहती हैं।
-- डिवाइस रूट होने पर भी हार्डवेयर कीज़ को एक्सट्रैक्ट नहीं किया जा सकता।
+- Cryptographic private keys reside directly inside the hardware **Android KeyStore (TEE / Secure Enclave)**.
+- Even if the host device is rooted, private keys cannot be extracted from hardware.
 
 ---
 
-## 🔗 संबंधित वॉल्ट नोट्स:
-- संपूर्ण फ़ाइल सूची: [[Directory_and_File_Map|फ़ाइल और डायरेक्टरी मैप]]
-- मैनिफ़ेस्ट और अनुमतियाँ: [[Android_Manifest_and_Permissions|मैनिफ़ेस्ट और सुरक्षा अनुमतियाँ]]
-- बैकग्राउंड सेवाएँ: [[Background_Services_and_Watchdog|बैकग्राउंड सर्विसेज और वॉचडॉग]]
-- लोकल डेटाबेस: [[Local_Database_Room_SQLCipher|लोकल रूम डेटाबेस]]
-- हार्डवेयर सुरक्षा: [[Hardware_Keystore_and_Crypto|की-स्टोर और AES-GCM]]
-- सिंक इंजन: [[Sync_Engines_and_Firebase_REST|सिंक इंजन और REST बैकअप]]
+## 🔗 Related Notes:
+- Full File Map: [[Directory_and_File_Map|Directory and Java File Map]]
+- Manifest & Permissions: [[Android_Manifest_and_Permissions|Android Manifest and Permissions]]
+- Background & Watchdog: [[Background_Services_and_Watchdog|Background Services and Watchdog]]
+- Local Database: [[Local_Database_Room_SQLCipher|Local Room Database]]
+- Hardware Crypto: [[Hardware_Keystore_and_Crypto|Hardware KeyStore & Crypto]]
+- Sync Engines: [[Sync_Engines_and_Firebase_REST|Sync Engines and Firebase REST]]

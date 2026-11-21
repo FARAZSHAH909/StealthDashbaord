@@ -1,5 +1,5 @@
 ---
-title: Obsidian में वॉल्ट कैसे खोलें (Step-by-Step Guide)
+title: How to Open This Vault in Obsidian (Quick Guide)
 tags:
   - obsidian
   - guide
@@ -10,19 +10,19 @@ date_created: 2026-11-21
 status: complete
 ---
 
-# 🚀 Obsidian में इस वॉल्ट को कैसे खोलें?
+# 🚀 How to Open This Vault in Obsidian
 
-यह वॉल्ट पहले से ही आपके कंप्यूटर पर पूरी तरह तैयार है। इसे देखने के लिए बस 3 आसान कदम उठाएं:
+This knowledge vault is already created and ready on your computer. Follow these 3 easy steps to view it:
 
-## कदम 1: Obsidian ऐप डाउनलोड करें (यदि पहले से नहीं है)
-- वेबसाइट: [obsidian.md](https://obsidian.md)
-- विंडोज़ के लिए इंस्टालर डाउनलोड करके रन करें (यह 100% फ्री है)।
+## Step 1: Download & Install Obsidian (If Not Already Installed)
+- Website: [obsidian.md](https://obsidian.md)
+- Download the free Windows installer and run it.
 
-## कदम 2: "Open folder as vault" चुनें
-1. Obsidian खोलें।
-2. वेलकम स्क्रीन पर **"Open folder as vault"** विकल्प के सामने **"Open"** बटन पर क्लिक करें।
+## Step 2: Select "Open folder as vault"
+1. Open the **Obsidian** app.
+2. On the welcome screen, click the **"Open"** button next to **"Open folder as vault"**.
 
-```
+```text
 +-------------------------------------------------------+
 |  Open folder as vault                                 |
 |  Choose a folder of Markdown files to use as a vault. |
@@ -30,20 +30,20 @@ status: complete
 +-------------------------------------------------------+
 ```
 
-## कदम 3: इस पाथ (Path) को सेलेक्ट करें
-ब्राउज़ करके इस फ़ोल्डर को चुनें:
+## Step 3: Choose This Folder Path
+Browse and select the following directory:
 ```text
 C:\Users\mj\OneDrive\Desktop\SEALTHAPPDASHBOARD\Obsidian_Vault
 ```
 
 ---
 
-## 🌟 जादुई फ़ीचर्स जो आपको तुरंत दिखेंगे:
-1. **Interactive Graph View (Ctrl + G):**
-   - कीबोर्ड पर `Ctrl + G` दबाएं। आपको दोनों प्रोजेक्ट्स ([[01 - Secure Admin Dashboard/Architecture_Overview|Secure Admin Dashboard]] और [[02 - Firebase App/Architecture_Overview|Firebase App]]) के सभी नोड्स और संबंध एक चमकते हुए गैलेक्सी मैप की तरह दिखाई देंगे।
-2. **File Explorer (बायां पैनल):**
-   - सभी फ़ोल्डर A-to-Z क्रम में व्यवस्थित हैं।
-3. **Internal Links Navigation:**
-   - किसी भी नीले लिंक (जैसे `[[Realtime_Database_Schema]]`) पर क्लिक करते ही वह तुरंत संबंधित डॉक्यूमेंट खोल देगा।
+## 🌟 Instant Features You Can Use:
+1. **Interactive Graph View (`Ctrl + G`):**
+   - Press `Ctrl + G` on your keyboard to see the interactive constellation map linking the [[01 - Secure Admin Dashboard/Architecture_Overview|Secure Admin Dashboard]] and [[02 - Firebase App/Architecture_Overview|Firebase App]].
+2. **File Explorer (Left Sidebar):**
+   - All modules and files are neatly categorized from A to Z.
+3. **WikiLink Navigation:**
+   - Click on any blue link (e.g. `[[Realtime_Database_Schema]]`) to navigate directly to that document.
 
-मुख्य सूची पर लौटें: [[00_Vault_Index|मास्टर वॉल्ट इंडेक्स]]
+Return to: [[00_Vault_Index|Master Index]]

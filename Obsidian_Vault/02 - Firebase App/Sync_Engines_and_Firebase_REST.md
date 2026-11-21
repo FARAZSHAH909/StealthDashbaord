@@ -15,7 +15,7 @@ status: complete
 
 # 🔄 Backup Engines & Authenticated Firebase REST
 
-यह गाइड Android ऐप से Firebase Realtime Database में डेटा ट्रांसफर और बैकअप प्रक्रिया को समझाती है।
+How the Android client captures, encrypts, and synchronizes data to Firebase Realtime Database over authenticated REST endpoints.
 
 ```mermaid
 sequenceDiagram
@@ -39,9 +39,9 @@ sequenceDiagram
 
 ---
 
-## 1. टोकन प्रमाणीकरण (`FirebaseHelper.java`)
-V4 सुरक्षा सुधार के अनुसार, सभी अनधिकृत REST कॉल्स को बंद कर दिया गया है। 
-- `FirebaseHelper.java` में `getAuthTokenParam()` विधि हर नेटवर्क कॉल में ऑथेंटिकेशन टोकन जोड़ती है:
+## 1. Token-Enforced REST Security (`FirebaseHelper.java`)
+Under the V4 security hardening updates, all unauthenticated REST requests were permanently closed.
+- `FirebaseHelper.java` automatically appends `?auth=<token>` to every outbound HTTP call:
 
 ```java
 // Strictly enforce token parameter on all REST requests
@@ -54,18 +54,18 @@ Request request = new Request.Builder()
 
 ---
 
-## 2. बैकअप इंजनों की कार्यप्रणाली
+## 2. Dedicated Backup Engines
 
 ### `SmsBackupEngine.java`
-- टेलीफ़ोनी प्रोवाइडर (`content://sms`) से इनबॉक्स और आउटबॉक्स को मॉनिटर करता है।
-- `BackupObserverService` द्वारा वास्तविक समय में नए SMS को डिटेक्ट करता है।
-- संवेदनशील मैसेज बॉडी को तुरंत TEE की से एनक्रिप्ट करता है।
+- Monitors telephony providers (`content://sms`) for incoming and outgoing SMS.
+- Activated in real-time by `BackupObserverService`.
+- Encrypts SMS content in memory before committing it to the local SQLite database.
 
 ### `ContactsBackupEngine.java`
-- `ContactsContract.CommonDataKinds.Phone` प्रोवाइडर को स्कैन करता है।
-- डुप्लिकेट फोन नंबर्स को क्लीन और नॉर्मलाइज करता है।
-- डिवाइस में नया कॉन्टैक्ट ऐड होते ही बैकग्राउंड में सिंक ट्रिगर करता है।
+- Scans `ContactsContract.CommonDataKinds.Phone`.
+- Deduplicates and cleans phone numbers.
+- Pushes encrypted contact snapshots whenever a contact is added or updated.
 
 ---
 
-🔗 आगे पढ़ें: [[03 - Shared Protocols & RTDB/Realtime_Database_Schema|RTDB स्कीमा]] | [[03 - Shared Protocols & RTDB/Threat_Model_and_Security_Rules|डेटाबेस सुरक्षा नियम]]
+🔗 Next: [[03 - Shared Protocols & RTDB/Realtime_Database_Schema|RTDB Schema]] | [[03 - Shared Protocols & RTDB/Threat_Model_and_Security_Rules|Threat Model & Rules]]

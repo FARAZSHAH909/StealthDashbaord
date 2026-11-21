@@ -1,0 +1,203 @@
+{
+  "main": {
+    "id": "8cd2bf558e5bd359",
+    "type": "split",
+    "children": [
+      {
+        "id": "5b1ebcbe0643cf12",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3ae233e614b8c1b2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "01 - Secure Admin Dashboard/Architecture_Overview.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Architecture_Overview"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "b52ffa7adf9efcb5",
+    "type": "split",
+    "children": [
+      {
+        "id": "eba26cf468038489",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2a9e3dd7b6f9ad9e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "d11d526580ef8332",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "8d2f4b6202087325",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "132a888d94555dae",
+    "type": "split",
+    "children": [
+      {
+        "id": "0dae14dc99433f30",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a5d714b12cc1cf5e",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "039df1232280729f",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "8f1eb7bf7fb59c0f",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "f1493c56d02d0031",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "2bc5be5ca9294ba9",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "3ae233e614b8c1b2",
+  "lastOpenFiles": [
+    "01 - Secure Admin Dashboard/API_Endpoints_Reference.md",
+    "00 - Start Here/02_How_To_Open_In_Obsidian.md",
+    "00 - Start Here/01_Obsidian_Kya_Hai_Aur_Fayde.md",
+    "00 - Start Here/00_Vault_Index.md",
+    "03 - Shared Protocols & RTDB/End_to_End_Encryption_Handshake.md",
+    "03 - Shared Protocols & RTDB/Realtime_Database_Schema.md",
+    "04 - Cross-System Roadmap/Dual_Project_Roadmap_and_Audit.md",
+    "02 - Firebase App/Hardware_Keystore_and_Crypto.md",
+    "02 - Firebase App/Directory_and_File_Map.md",
+    "02 - Firebase App/Background_Services_and_Watchdog.md",
+    "02 - Firebase App/Architecture_Overview.md",
+    "02 - Firebase App/Android_Manifest_and_Permissions.md"
+  ]
+}

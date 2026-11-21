@@ -14,11 +14,11 @@ status: complete
 
 # 🔄 Realtime Sync & Custom React Hooks
 
-वेब डैशबोर्ड Firebase Realtime Database (RTDB) के साथ लाइव दो-तरफ़ा सिंक बनाए रखने के लिए कस्टम रिएक्ट हुक्स का उपयोग करता है।
+The web dashboard uses modular React hooks to maintain live WebSocket connections with Firebase Realtime Database (RTDB).
 
-## 1. कोर डेटा हुक: `useFirebaseData.js`
-- **उद्देश्य:** किसी भी RTDB पाथ पर लाइव WebSocket लिस्नर (`onValue`) सेट करता है।
-- **सुरक्षा और मेमोरी प्रबंधन:** जब यूज़र पेज बदलता है, तो यह हुक अपने आप अनसब्सक्राइब (`off`) कर देता है ताकि मेमोरी लीक न हो।
+## 1. Core Data Hook: `useFirebaseData.js`
+- **Purpose:** Subscribes to real-time events (`onValue`) on any arbitrary RTDB path.
+- **Memory Cleanup:** Automatically unbinds listeners (`off`) on component unmount to prevent memory leaks and zombie connections.
 
 ```javascript
 // Example Usage
@@ -27,21 +27,22 @@ const { data, loading, error } = useFirebaseData(`notifications_log/${deviceId}`
 
 ---
 
-## 2. SMS वॉल्ट हुक: `useSmsVault.js`
-- **उद्देश्य:** `/sms_vault/${deviceId}` नोड को लाइव सुनता है।
-- **स्वचालित बैच डिक्रिप्शन:** जैसे ही नया एनक्रिप्टेड SMS आता है, यह `KeyVaultContext` के साथ मिलकर बैकग्राउंड में उसे तुरंत डिक्रिप्ट करके UI स्टेट में डाल देता है।
+## 2. SMS Vault Hook: `useSmsVault.js`
+- **Purpose:** Subscribes to `/sms_vault/${deviceId}`.
+- **Automatic Stream Decryption:** Listens for new encrypted SMS messages, automatically decrypts them via `KeyVaultContext` using the device AES key, and updates the UI state in real time.
 
 ---
 
-## 3. कॉन्टैक्ट्स वॉल्ट हुक: `useContactsVault.js`
-- **उद्देश्य:** `/contacts_vault/${deviceId}` नोड से सिंक किए गए सभी कॉन्टैक्ट्स लोड करता है।
-- **क्लाइंट-साइड इंडेक्सिंग:** फोन नंबर, नाम और ईमेल के आधार पर इन-मेमोरी त्वरित सर्च (Search & Filter) प्रदान करता है।
+## 3. Contacts Vault Hook: `useContactsVault.js`
+- **Purpose:** Subscribes to `/contacts_vault/${deviceId}`.
+- **Client-Side Indexing:** Organizes contacts into searchable alphabetical indexes for instantaneous search by name or telephone number.
 
 ---
 
-## 4. रिमोट ऐप अपडेट हुक: `useAppUpdate.js`
-- **उद्देश्य:** `/app_updates` नोड पर नया APK रिलीज़ पब्लिश करने, वर्जन ट्रैक करने और SHA-256 हैश वैरिफाई करने में मदद करता है।
+## 4. App Update Management Hook: `useAppUpdate.js`
+- **Purpose:** Subscribes to `/app_updates`.
+- **Release Verification:** Tracks live APK version numbers, validates SHA-256 integrity checksums, and manages forced remote update flags.
 
 ---
 
-🔗 आगे पढ़ें: [[Security_and_DevSecOps|सिक्योरिटी और DevSecOps]] | [[03 - Shared Protocols & RTDB/Realtime_Database_Schema|RTDB स्कीमा]]
+🔗 Next: [[Security_and_DevSecOps|Security Hardening & DevSecOps]] | [[03 - Shared Protocols & RTDB/Realtime_Database_Schema|RTDB Schema]]

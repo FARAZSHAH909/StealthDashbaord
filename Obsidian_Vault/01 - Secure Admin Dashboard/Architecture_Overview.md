@@ -14,18 +14,18 @@ status: active
 
 # 🌐 Secure Admin Dashboard — Architecture Overview
 
-> [!NOTE] प्रोजेक्ट पहचान
-> - **प्रोजेक्ट नाम:** Secure Admin Dashboard
-> - **प्लेटफॉर्म:** Modern Web Browser (Chrome, Firefox, Safari, Edge)
-> - **कोडबेस लोकेशन:** `c:\Users\mj\OneDrive\Desktop\SEALTHAPPDASHBOARD`
-> - **रिमोट गिट रेपो:** `https://github.com/FARAZSHAH909/StealthDashbaord.git` (शाखा: `staging`)
-> - **प्राइमरी स्टैक:** Next.js 14 (App Router), React 18, Tailwind CSS, Firebase Admin/Client SDK, WebCrypto API
+> [!NOTE] Project Identification
+> - **Project Name:** Secure Admin Dashboard
+> - **Platform:** Modern Web Browser (Chrome, Firefox, Safari, Edge)
+> - **Codebase Path:** `c:\Users\mj\OneDrive\Desktop\SEALTHAPPDASHBOARD`
+> - **Remote Git Repo:** `https://github.com/FARAZSHAH909/StealthDashbaord.git` (Branch: `staging`)
+> - **Primary Tech Stack:** Next.js 14 (App Router), React 18, Tailwind CSS, Firebase Admin/Client SDK, WebCrypto API
 
 ```mermaid
 flowchart TD
     subgraph Client ["Client-Side (Admin Browser)"]
         BrowserSession["Admin Browser Session"]
-        KeyVault["KeyVaultContext (Local Key Storage)"]
+        KeyVault["KeyVaultContext (In-Memory Key State)"]
         WebCrypto["WebCrypto Engine (In-Browser Decryption)"]
         Feeds["Virtual Message Feed / SMS / Contacts Vault"]
     end
@@ -54,24 +54,24 @@ flowchart TD
 
 ---
 
-## 🏗️ कोर आर्किटेक्चरल सिद्धांत (Architectural Principles)
+## 🏗️ Core Architectural Principles
 
-### 1. Zero-Knowledge Client-Side Decryption (शून्य-ज्ञान डिक्रिप्शन)
-- सर्वर कभी भी यूज़र के डेटा (कॉल, SMS, कॉन्टैक्ट्स या नोटिफिकेशन्स) को प्लेनटेक्स्ट में नहीं देखता।
-- सभी डिक्रिप्शन ब्राउज़र की मेमोरी में **WebCrypto API** द्वारा होती हैं।
-- अगर कोई हैकर या अटैकर बैकएंड डेटाबेस को हैक भी कर ले, तो उसे केवल AES-256-GCM एनक्रिप्टेड साइफरटेक्स्ट मिलेगा।
+### 1. Zero-Knowledge Client-Side Decryption
+- The server never sees user data (calls, SMS, contacts, or notifications) in plain text.
+- All decryption happens exclusively inside the browser's volatile memory via the native **W3C WebCrypto API**.
+- Even if the cloud database is compromised, an attacker only gets AES-256-GCM encrypted ciphertext without keys.
 
-### 2. Multi-Tier Defense-in-Depth (गहन सुरक्षा परतें)
-- **परत 1 (Edge Middleware):** `src/middleware.js` हर अनधिकृत रिक्वेस्ट को डैशबोर्ड के मुख्य पेजों तक पहुँचने से पहले ही `/login` पर रीडायरेक्ट कर देता है।
-- **परत 2 (HMAC Session Tokens):** केवल कुकी नहीं, बल्कि सर्वर-वेरिफाइड क्रिप्टोग्राफिक HMAC सिग्नेचर (`src/lib/auth/sessionCrypto.js`) चेक होता है।
-- **परत 3 (RBAC Enforcement):** सुपर-एडमिन, एडमिन और व्यूअर रोल्स को सख्त अनुमतियों के साथ लागू किया गया है।
-- **परत 4 (ग्लोबल रेट लिमिटिंग):** ब्रूट-फ़ोर्स या DoS हमलों को रोकने के लिए प्रोग्रेसिव लॉकआउट और IP रेट लिमिटर मौजूद हैं।
+### 2. Multi-Tier Defense-in-Depth
+- **Layer 1 (Edge Middleware):** `src/middleware.js` intercepts every incoming HTTP request and redirects unauthenticated users to `/login` before rendering pages.
+- **Layer 2 (HMAC Session Tokens):** Authentication relies on server-verified HMAC-SHA256 signatures (`src/lib/auth/sessionCrypto.js`) rather than insecure client cookies.
+- **Layer 3 (Role-Based Access Control):** Permissions are strictly enforced across `super_admin`, `admin`, and `viewer`.
+- **Layer 4 (Global Rate Limiting):** Progressive lockout and sliding-window IP limits protect endpoints against brute-force and DoS attacks.
 
 ---
 
-## 🔗 संबंधित वॉल्ट नोट्स:
-- पूरे फ़ोल्डरों और फ़ाइलों की सूची: [[Directory_and_File_Map|फ़ाइल और डायरेक्टरी मैप]]
-- सुरक्षा और टोकन सत्यापन: [[Authentication_and_RBAC|ऑथेंटिकेशन और रोल-बेस्ड एक्सेस कंट्रोल]]
-- ब्राउज़र एन्क्रिप्शन इंजन: [[Key_Vault_and_Crypto_Engine|की वॉल्ट और वेबक्रिप्टो]]
-- API एंडपॉइंट्स: [[API_Endpoints_Reference|API रूट्स रेफरेंस]]
-- मास्टर इंडेक्स: [[00 - Start Here/00_Vault_Index|मास्टर वॉल्ट इंडेक्स]]
+## 🔗 Related Notes:
+- Full File Map: [[Directory_and_File_Map|Directory and File Map]]
+- Authentication & Roles: [[Authentication_and_RBAC|Authentication and RBAC]]
+- Browser Crypto: [[Key_Vault_and_Crypto_Engine|Key Vault and Crypto Engine]]
+- API Endpoints: [[API_Endpoints_Reference|API Endpoints Reference]]
+- Master Index: [[00 - Start Here/00_Vault_Index|Master Index]]

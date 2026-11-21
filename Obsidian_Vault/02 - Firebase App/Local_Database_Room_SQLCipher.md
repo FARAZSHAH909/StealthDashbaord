@@ -15,7 +15,7 @@ status: complete
 
 # 🗄️ Local Encrypted Database — Room & SQLCipher
 
-Android डिवाइस पर ऑफलाइन स्टोरेज और डेटा सुरक्षा के लिए SQLite डेटाबेस को 256-बिट AES एन्क्रिप्शन (**SQLCipher**) से लॉक किया गया है।
+For offline storage and defense against physical extraction attacks, the Android client protects all local SQLite data using 256-bit AES **SQLCipher** encryption at rest.
 
 ```mermaid
 erDiagram
@@ -51,31 +51,31 @@ erDiagram
 
 ---
 
-## 1. SQLCipher रेस्ट-एन्क्रिप्शन (Encryption at Rest)
-`AppDatabase.java` में:
-- साधारण SQLite फाइल के विपरीत, डेटाबेस फाइल डिस्क पर बाइट-लेवल पर एन्क्रिप्टेड रहती है।
-- यदि डिवाइस को कंप्यूटर से कनेक्ट करके ADB या रूट एक्सप्लोरर से `.db` फाइल निकाल भी ली जाए, तो वह बिना हार्डवेयर की के खोली नहीं जा सकती।
+## 1. SQLCipher Encryption at Rest
+In `AppDatabase.java`:
+- Unlike standard unencrypted SQLite databases, every byte written to disk is encrypted on-the-fly.
+- Even if an attacker connects the device to ADB or roots the phone to extract the `.db` file, it cannot be read without the hardware-backed key.
 
 ---
 
-## 2. डेटा एंटिटी और टेबल स्कीमा
+## 2. Entity Schemas & Tables
 
 ### `NotificationEntity.java`
-- `packageName`: नोटिफिकेशन भेजने वाली ऐप की पहचान (उदा. `com.whatsapp`)।
-- `encryptedPayload`: AES-256-GCM द्वारा सुरक्षित टेक्स्ट, शीर्षक और टाइमस्टैम्प।
-- `isSynced`: बूलियन फ्लैग (0 = केवल लोकल, 1 = Firebase पर अपलोडेड)।
+- `packageName`: Identifies the sending application (e.g., `com.whatsapp`).
+- `encryptedPayload`: AES-256-GCM ciphertext containing notification title, body, and timestamp.
+- `isSynced`: Boolean flag (0 = local only, 1 = successfully synced to Firebase RTDB).
 
 ### `SmsEntity.java`
-- `sender`: फोन नंबर या सेंडर ID।
-- `encryptedBody`: मैसेज की सुरक्षित सामग्री।
-- `date`: मैसेज आने/जाने का यूनिक्स टाइमस्टैम्प।
-- `type`: 1 (इनबॉक्स), 2 (सेंट)।
+- `sender`: Telephone number or sender ID.
+- `encryptedBody`: E2EE encrypted message body.
+- `date`: Epoch millisecond timestamp.
+- `type`: 1 (Inbox) or 2 (Sent).
 
 ### `ContactEntity.java`
-- `displayName`: संपर्क का नाम।
-- `phoneNumbers`: मोबाइल/होम/वर्क नंबर (JSON ऐरे)।
-- `encryptedData`: पूरा एनक्रिप्टेड संपर्क रिकॉर्ड।
+- `displayName`: Contact name.
+- `phoneNumbers`: JSON array of phone numbers.
+- `encryptedData`: Full contact payload encrypted with AES-256-GCM.
 
 ---
 
-🔗 आगे पढ़ें: [[Hardware_Keystore_and_Crypto|हार्डवेयर की-स्टोर और क्रिप्टो]] | [[Sync_Engines_and_Firebase_REST|सिंक इंजन]]
+🔗 Next: [[Hardware_Keystore_and_Crypto|Hardware KeyStore & Crypto]] | [[Sync_Engines_and_Firebase_REST|Sync Engines]]

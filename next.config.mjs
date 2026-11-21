@@ -78,6 +78,10 @@ const nextConfig = {
         source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/isolated-contacts-vault-directory',
         destination: '/dashboard/contacts',
       },
+      {
+        source: '/corp-workspace/ctx-8a19f93c04b862145dae87b290cd419f8a37e1b54c0e62810/isolated-media-vault-gallery',
+        destination: '/dashboard/media',
+      },
     ];
   },
   webpack: (config, { isServer }) => {

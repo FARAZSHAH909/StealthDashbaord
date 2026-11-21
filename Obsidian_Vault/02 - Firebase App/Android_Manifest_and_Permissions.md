@@ -15,24 +15,24 @@ status: complete
 
 # 📜 Android Manifest Configuration & Permissions
 
-`app/src/main/AndroidManifest.xml` में कॉन्फ़िगर की गई सभी सुरक्षा नीतियां और अनुमतियां।
+Details of all permissions, intent filters, and security hardening in `app/src/main/AndroidManifest.xml`.
 
-## 1. आवश्यक सिस्टम अनुमतियाँ (System Permissions)
+## 1. Required System Permissions
 
-| अनुमति | उपयोग का कारण | सुरक्षा प्रभाव |
+| Permission | Purpose | Security Impact |
 | :--- | :--- | :--- |
-| `android.permission.INTERNET` | Firebase RTDB और अपडेट सर्वर से संचार | आउटबाउंड HTTPS कनेक्शन |
-| `android.permission.RECEIVE_BOOT_COMPLETED` | फोन ऑन होते ही बैकग्राउंड सर्विसेज शुरू करना | लगातार सुरक्षा निगरानी |
-| `android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Doze मोड में ऐप को बंद होने से बचाना | निरंतर बैकग्राउंड सिंक |
-| `android.permission.FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_DATA_SYNC` | Android 14+ अनुकूल डेटा सिंक सर्विस | OS द्वारा सर्विस किल होने से बचाव |
-| `android.permission.READ_SMS` | SMS बैकअप इंजन के लिए इनबॉक्स/आउटबॉक्स पढ़ना | संवेदनशील डेटा (E2EE एनक्रिप्टेड) |
-| `android.permission.READ_CONTACTS` | कॉन्टैक्ट्स बैकअप इंजन के लिए एड्रेस बुक पढ़ना | संवेदनशील डेटा (E2EE एनक्रिप्टेड) |
-| `android.permission.REQUEST_INSTALL_PACKAGES` | रिमोट APK अपडेट इंस्टॉलेशन | केवल सत्यापित SHA-256 APK |
+| `android.permission.INTERNET` | Firebase RTDB and update server communication. | Outbound HTTPS connections only. |
+| `android.permission.RECEIVE_BOOT_COMPLETED` | Starts background services when device boots up. | Persistent monitoring. |
+| `android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Prevents OS battery savers from killing workers. | Uninterrupted background sync. |
+| `android.permission.FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_DATA_SYNC` | Android 14+ compliant foreground sync service. | Prevents OS process reclamation. |
+| `android.permission.READ_SMS` | Allows SMS backup engine to read incoming/outgoing texts. | E2EE encrypted immediately. |
+| `android.permission.READ_CONTACTS` | Allows contacts backup engine to read address book. | E2EE encrypted immediately. |
+| `android.permission.REQUEST_INSTALL_PACKAGES` | Allows remote APK update installation. | Restricted to verified SHA-256 APKs. |
 
 ---
 
-## 2. StrandHogg 2.0 टास्क हाईजैकिंग सुरक्षा (Task Hijacking Mitigation)
-मोबएसएफ और SAST ऑडिट में टास्क हाईजैकिंग एक गंभीर भेद्यता (CWE-1021) पाई गई थी। इसे ठीक करने के लिए `MainActivity` को इस प्रकार सुरक्षित किया गया है:
+## 2. StrandHogg 2.0 Task Hijacking Mitigation
+MobSF identified StrandHogg 2.0 task hijacking (CWE-1021) as a risk in unconfigured activities. In `MainActivity`, this was completely eliminated:
 
 ```xml
 <activity
@@ -47,15 +47,15 @@ status: complete
     </intent-filter>
 </activity>
 ```
-- `launchMode="singleInstance"`: ऐप का अपना अलग टास्क स्टैक होता है।
-- `taskAffinity=""`: किसी भी मलेशियस थर्ड-पार्टी ऐप को इस एक्टिविटी के टास्क स्टैक को हाईजैक करने से रोकता है।
+- `launchMode="singleInstance"`: Ensures the activity is isolated in its own dedicated task stack.
+- `taskAffinity=""`: Prevents malicious apps from superimposing their tasks or intercepting user interactions.
 
 ---
 
-## 3. नेटवर्क सुरक्षा कॉन्फ़िगरेशन (`network_security_config.xml`)
-- ऐप में केवल **TLS 1.3 और TLS 1.2** के माध्यम से HTTPS ट्रैफिक की अनुमति है।
-- प्लेनटेक्स्ट HTTP ट्रैफिक (`cleartextTrafficPermitted="false"`) पूरी तरह से प्रतिबंधित है।
+## 3. Network Security Configuration (`network_security_config.xml`)
+- Only **TLS 1.2 and TLS 1.3** encrypted connections are allowed.
+- Cleartext HTTP traffic (`cleartextTrafficPermitted="false"`) is blocked at the OS network level.
 
 ---
 
-🔗 आगे पढ़ें: [[Background_Services_and_Watchdog|बैकग्राउंड सर्विसेज और वॉचडॉग]] | [[Hardware_Keystore_and_Crypto|हार्डवेयर की-स्टोर]]
+🔗 Next: [[Background_Services_and_Watchdog|Background Services and Watchdog]] | [[Hardware_Keystore_and_Crypto|Hardware KeyStore & Crypto]]
